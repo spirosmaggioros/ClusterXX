@@ -6,16 +6,6 @@
 #include <math.h>
 #include <vector>
 
-auto vector_diff = [](std::vector<double> a, std::vector<double> b) -> double {
-    assert(a.size() == b.size());
-    double res = 0.0;
-    for (size_t i = 0; i < a.size(); i++) {
-        res += (a[i] - b[i]) * (a[i] - b[i]);
-    }
-
-    return res;
-};
-
 double compute_sigma(const std::vector<double> &distances,
                      double target_perplexity, double tolerance = 1e-5,
                      int max_iter = 100) {
@@ -57,14 +47,14 @@ double compute_sigma(const std::vector<double> &distances,
 
 std::vector<std::vector<double>>
 compute_pairwise_affinities(std::vector<std::vector<double>> features,
-                            double perplexity) {
+                            double perplexity, auto metric) {
     std::vector<std::vector<double>> p_ji(features.size(),
                                           std::vector<double>(features.size()));
     for (size_t i = 0; i < features.size(); i++) {
         std::vector<double> distances;
         for (size_t j = 0; j < features.size(); j++) {
             if (i != j) {
-                distances.push_back(vector_diff(features[i], features[j]));
+                distances.push_back(metric(features[i], features[j]));
             }
         }
 
@@ -94,14 +84,15 @@ compute_pairwise_affinities(std::vector<std::vector<double>> features,
 }
 
 std::vector<std::vector<double>>
-compute_low_dim_affinities(const std::vector<std::vector<double>> Y) {
+compute_low_dim_affinities(const std::vector<std::vector<double>> Y,
+                           auto metric) {
     std::vector<std::vector<double>> q_ij(Y.size(),
                                           std::vector<double>(Y.size()));
     std::vector<double> distances;
     for (size_t i = 0; i < Y.size(); i++) {
         for (size_t j = 0; j < Y.size(); j++) {
             if (i != j) {
-                distances.push_back(vector_diff(Y[i], Y[j]));
+                distances.push_back(metric(Y[i], Y[j]));
             }
         }
 
@@ -130,7 +121,8 @@ compute_low_dim_affinities(const std::vector<std::vector<double>> Y) {
 std::vector<std::vector<double>>
 kullback_leibler_gradient(std::vector<std::vector<double>> pairwise_affinities,
                           std::vector<std::vector<double>> low_dim_affinities,
-                          std::vector<std::vector<double>> low_dim_features) {
+                          std::vector<std::vector<double>> low_dim_features,
+                          auto metric) {
     assert(pairwise_affinities.size() == low_dim_affinities.size());
     assert(pairwise_affinities[0].size() == low_dim_affinities[0].size());
 
@@ -144,8 +136,7 @@ kullback_leibler_gradient(std::vector<std::vector<double>> pairwise_affinities,
                 double factor =
                     4.0 *
                     (pairwise_affinities[i][j] - low_dim_affinities[i][j]) /
-                    (1.0 +
-                     vector_diff(low_dim_features[i], low_dim_features[j]));
+                    (1.0 + metric(low_dim_features[i], low_dim_features[j]));
 
                 for (size_t k = 0; k < low_dim_features[0].size(); k++) {
                     gradient[i][k] += factor * (low_dim_features[i][k] -

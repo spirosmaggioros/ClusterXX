@@ -6,8 +6,10 @@
 #include <vector>
 
 #include "../../base/manifold_method.hpp"
+#include "../../metrics/metrics.hpp"
 
 namespace clusterxx {
+template <typename Metric = clusterxx::metrics::euclidean_distance>
 class TSNE : manifold_method {
   private:
     int __n_components;
@@ -15,6 +17,7 @@ class TSNE : manifold_method {
     double __learning_rate;
     int __max_iter;
     double __momentum = 0.5;
+    Metric metric;
 
     std::pair<int, int> __shape;
     std::vector<std::vector<double>> __features;
