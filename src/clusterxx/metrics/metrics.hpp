@@ -40,6 +40,22 @@ struct squared_euclidean_distance {
     }
 };
 
+struct chebyshev_distance {
+    double operator()(const std::vector<double> &X,
+                      const std::vector<double> &Y) const {
+        assert(!X.empty());
+        assert(!Y.empty());
+        assert(X.size() == Y.size());
+
+        double dist = 0.0;
+        for (size_t i = 0; i < X.size(); i++) {
+            dist = std::max(dist, abs(X[i] - Y[i]));
+        }
+
+        return dist;
+    }
+};
+
 struct manhattan_distance {
     double operator()(const std::vector<double> &X,
                       const std::vector<double> &Y) const {
@@ -61,7 +77,7 @@ namespace pairwise_distances {
 struct euclidean_distances {
     std::vector<std::vector<double>>
     operator()(const std::vector<std::vector<double>> &X,
-               const std::vector<std::vector<double>> Y = {}) const {
+               const std::vector<std::vector<double>> &Y = {}) const {
         return compute_pairwise_distances<
             clusterxx::metrics::euclidean_distance>(X, Y);
     }
@@ -70,7 +86,7 @@ struct euclidean_distances {
 struct manhattan_distances {
     std::vector<std::vector<double>>
     operator()(const std::vector<std::vector<double>> &X,
-               const std::vector<std::vector<double>> Y = {}) const {
+               const std::vector<std::vector<double>> &Y = {}) const {
         return compute_pairwise_distances<
             clusterxx::metrics::manhattan_distance>(X, Y);
     }
@@ -79,9 +95,17 @@ struct manhattan_distances {
 struct squared_euclidean_distances {
     std::vector<std::vector<double>>
     operator()(const std::vector<std::vector<double>> &X,
-               const std::vector<std::vector<double>> Y = {}) const {
+               const std::vector<std::vector<double>> &Y = {}) const {
         return compute_pairwise_distances<
             clusterxx::metrics::squared_euclidean_distance>(X, Y);
+    }
+};
+
+struct chebyshev_distances {
+    std::vector<std::vector<double>>
+    operator ()(const std::vector<std::vector<double>> &X,
+                const std::vector<std::vector<double>> &Y = {}) const {
+        return compute_pairwise_distances<clusterxx::metrics::chebyshev_distance>(X, Y);
     }
 };
 } // namespace pairwise_distances
