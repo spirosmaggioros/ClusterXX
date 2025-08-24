@@ -3,38 +3,103 @@
 #include <random>
 #include <vector>
 
+TEST_CASE("Testing KMeans fit method with 2D data", "[kmeans]") {
+std::vector<std::vector<double>> X;
 
-// TEST_CASE("Testing KMeans fit method with 2D data", "[kmeans]") {
-//     std::random_device dev;
-//     std::mt19937 rng(dev());
-// 
-//     std::vector<std::vector<double>> X;
-// 
-//     for (int i = 0; i<1000; i++) {
-//         std::uniform_int_distribution<std::mt19937::result_type> dist(-3, 3);
-//         std::vector<double> _curr;
-//         _curr.push_back(dist(rng));
-//         _curr.push_back(dist(rng));
-//         X.push_back(_curr);
-//     }
-// 
-//     for (int i = 0; i<1000; i++) {
-//         std::uniform_int_distribution<std::mt19937::result_type> dist(30, 35);
-//         std::vector<double> _curr;
-//         _curr.push_back(dist(rng));
-//         _curr.push_back(dist(rng));
-//         X.push_back(_curr);
-//     }
-// 
-//     clusterxx::KMeans kmeans = clusterxx::KMeans(2);
-//     REQUIRE_NOTHROW(kmeans.fit(X));
-// 
-//     std::vector<int> labels = kmeans.get_labels();
-//     REQUIRE(labels.size() == 2000);
-// }
+    for (int i = 0; i < 1000; i++) {
+        std::vector<double> _curr;
+        _curr.push_back(rand() % 3);
+        _curr.push_back(rand() % 3);
+        X.push_back(_curr);
+    }
 
-TEST_CASE("Testing k-means++ algorithm", "[kmeans]") {
-    std::vector<std::vector<double>> X = {{7, 4}, {8, 3}, {5, 9}, {3, 3}, {1, 3}, {10, 1}};
+    for (int i = 0; i < 1000; i++) {
+        std::vector<double> _curr;
+        _curr.push_back(25 + rand() % (30 - 25 + 1));
+        _curr.push_back(25 + rand() % (30 - 25 + 1));
+        X.push_back(_curr);
+    }
+
     clusterxx::KMeans kmeans = clusterxx::KMeans(2);
     REQUIRE_NOTHROW(kmeans.fit(X));
+
+    std::vector<int> labels = kmeans.get_labels();
+    REQUIRE(labels.size() == 2000);
+
+    std::vector<std::vector<double>> to_predict = {{0, 0}, {50, 50}};
+    labels = kmeans.predict(to_predict);
+
+    if (labels[0] == 0) {
+        REQUIRE(labels[1] == 1);
+    } else {
+        REQUIRE(labels[1] == 0);
+    }
+}
+
+TEST_CASE("Testing KMeans with a different metric", "[kmeans]") {
+    // Note that you should use a clusterxx::pairwise_distances metric for clustering
+
+    std::vector<std::vector<double>> X = {{0.0, 0.0, 0.0}, {0.5, 0.5, 0.5}, {10.0, 10.0, 10.0}, {11.0, 11.0, 11.0}};
+    clusterxx::KMeans<clusterxx::pairwise_distances::manhattan_distances> kmeans = clusterxx::KMeans<clusterxx::pairwise_distances::manhattan_distances>(2);
+    REQUIRE_NOTHROW(kmeans.fit(X));
+
+    std::vector<int> labels = kmeans.get_labels();
+    REQUIRE(labels.size() == 4);
+    REQUIRE(labels[0] != labels[2]);
+    REQUIRE(labels[1] != labels[3]);
+}
+
+TEST_CASE("Testing with random mode", "[kmeans]") {
+    std::vector<std::vector<double>> X = {{0.0, 0.0, 0.0}, {0.5, 0.5, 0.5}, {10.0, 10.0, 10.0}, {11.0, 11.0, 11.0}};
+    clusterxx::KMeans kmeans = clusterxx::KMeans(/* n_clusters */ 2, /* max_iter */ 300, /* init */ "random");
+    REQUIRE_NOTHROW(kmeans.fit(X));
+    std::vector<int> labels = kmeans.get_labels();
+    REQUIRE(labels[0] != labels[3]);
+}
+
+TEST_CASE("Testing with static random state", "[kmeans]") {
+    std::vector<std::vector<double>> X = {{0.0, 0.0, 0.0}, {0.5, 0.5, 0.5}, {10.0, 10.0, 10.0}, {11.0, 11.0, 11.0}};
+    clusterxx::KMeans kmeans = clusterxx::KMeans(/* n_clusters */ 2, /* max_iter */ 300, /* init */ "random", /* random state */ 42);
+    REQUIRE_NOTHROW(kmeans.fit(X));
+    std::vector<int> labels = kmeans.get_labels();
+    REQUIRE(labels[0] != labels[3]);
+}
+
+TEST_CASE("Testing high dimensional data", "[kmeans]") {
+    std::vector<std::vector<double>> X;
+    for (int i = 0; i < 1000; i++) {
+        std::vector<double> _curr;
+        for (int j = 0; j < 15; j++) {
+            _curr.push_back(rand() % 3);
+        }
+        X.push_back(_curr);
+    }
+
+    for (int i = 0; i < 1000; i++) {
+        std::vector<double> _curr;
+        for (int j = 0; j < 15; j++) {
+            _curr.push_back(25 + rand() % (30 - 25 + 1));
+        }
+        X.push_back(_curr);
+    }
+
+    clusterxx::KMeans kmeans = clusterxx::KMeans(2);
+    std::vector<int> labels = kmeans.fit_predict(X);
+    std::vector<std::vector<double>> centroids = kmeans.get_centroids();
+    REQUIRE(centroids.size() == 2);
+    REQUIRE(centroids[0].size() == 15);
+    REQUIRE(labels.size() == 2000);
+
+    std::vector<std::vector<double>> to_predict;
+    std::vector<double> feat;
+    for (int i = 0; i < 15; i++) {
+        feat.push_back(20 + rand() % (35 - 20 + 1));
+    }
+    to_predict.push_back(feat);
+
+    // Note that you can predict when you've performed fit_predict().
+    // We don't destroy the state when you run fit_predict, we could've worked
+    // just with fit(), but we wanted to make the API just like scikit's.
+    std::vector<int> predicted_labels = kmeans.predict(to_predict);
+    REQUIRE(predicted_labels[0] == labels[1001]);
 }
