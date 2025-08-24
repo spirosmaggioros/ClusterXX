@@ -1,12 +1,9 @@
-sources = [
-    'clusterxx/methods/tsne/tsne.cc',
-]
+sources = []
 
-libclusterxx = static_library(
-    'clusterxx',
-    sources: sources,
-    include_directories: include_directories('.'),
-    install: true,
+clusterxx_inc = include_directories('.')
+
+libclusterxx = declare_dependency(
+    include_directories: clusterxx_inc,
 )
 
 install_headers('clusterxx.hpp', subdir: '')

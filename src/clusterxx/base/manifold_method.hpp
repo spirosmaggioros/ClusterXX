@@ -13,9 +13,9 @@ class manifold_method {
     manifold_method &operator=(const manifold_method &) = default;
     manifold_method &operator=(manifold_method &&) = default;
 
-    virtual void fit(const std::vector<std::vector<double>> X) = 0;
+    virtual void fit(const std::vector<std::vector<double>> &X) = 0;
     virtual std::vector<std::vector<double>>
-    fit_transform(const std::vector<std::vector<double>> X) = 0;
+    fit_transform(const std::vector<std::vector<double>> &X) = 0;
 };
 } // namespace clusterxx
 
