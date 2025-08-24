@@ -27,14 +27,14 @@ class TSNE : manifold_method {
                            double target_perplexity, double tolerance = 1e-5,
                            int max_iter = 100);
     std::vector<std::vector<double>>
-    __compute_pairwise_affinities(std::vector<std::vector<double>> features,
+    __compute_pairwise_affinities(const std::vector<std::vector<double>> &features,
                                   double perplexity);
     std::vector<std::vector<double>>
-    __compute_low_dim_affinities(const std::vector<std::vector<double>> Y);
+    __compute_low_dim_affinities(const std::vector<std::vector<double>> &Y);
     std::vector<std::vector<double>> __kullback_leibler_gradient(
-        std::vector<std::vector<double>> pairwise_affinities,
-        std::vector<std::vector<double>> low_dim_affinities,
-        std::vector<std::vector<double>> low_dim_features);
+        const std::vector<std::vector<double>> &pairwise_affinities,
+        const std::vector<std::vector<double>> &low_dim_affinities,
+        const std::vector<std::vector<double>> &low_dim_features);
 
   public:
     TSNE(int n_components = 2, double perplexity = 30.0,

@@ -48,7 +48,7 @@ clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<double> &distances,
 template <typename Metric>
 std::vector<std::vector<double>>
 clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
-    std::vector<std::vector<double>> features, double perplexity) {
+    const std::vector<std::vector<double>> &features, double perplexity) {
     std::vector<std::vector<double>> p_ji(features.size(),
                                           std::vector<double>(features.size()));
     for (size_t i = 0; i < features.size(); i++) {
@@ -87,7 +87,7 @@ clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 template <typename Metric>
 std::vector<std::vector<double>>
 clusterxx::TSNE<Metric>::__compute_low_dim_affinities(
-    const std::vector<std::vector<double>> Y) {
+    const std::vector<std::vector<double>> &Y) {
     std::vector<std::vector<double>> q_ij(Y.size(),
                                           std::vector<double>(Y.size()));
     std::vector<double> distances;
@@ -123,9 +123,9 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(
 template <typename Metric>
 std::vector<std::vector<double>>
 clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
-    std::vector<std::vector<double>> pairwise_affinities,
-    std::vector<std::vector<double>> low_dim_affinities,
-    std::vector<std::vector<double>> low_dim_features) {
+    const std::vector<std::vector<double>> &pairwise_affinities,
+    const std::vector<std::vector<double>> &low_dim_affinities,
+    const std::vector<std::vector<double>> &low_dim_features) {
     assert(pairwise_affinities.size() == low_dim_affinities.size());
     assert(pairwise_affinities[0].size() == low_dim_affinities[0].size());
 
