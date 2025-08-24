@@ -1,7 +1,7 @@
 #ifndef CLUSTERXX_METRICS_METRICS_HPP
 #define CLUSTERXX_METRICS_METRICS_HPP
 
-#include "utils.hpp"
+#include "clusterxx/metrics/utils.hpp"
 #include <assert.h>
 #include <math.h>
 #include <vector>

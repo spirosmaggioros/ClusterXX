@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "../../base/manifold_method.hpp"
-#include "../../metrics/metrics.hpp"
+#include "clusterxx/base/manifold_method.hpp"
+#include "clusterxx/metrics/metrics.hpp"
 
 namespace clusterxx {
 template <typename Metric = clusterxx::metrics::euclidean_distance>

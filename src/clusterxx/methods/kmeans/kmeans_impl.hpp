@@ -1,7 +1,6 @@
 #ifndef CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 #define CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 
-#include "clusterxx/metrics/metrics.hpp"
 #include "kmeans.hpp"
 #include <algorithm>
 #include <assert.h>
