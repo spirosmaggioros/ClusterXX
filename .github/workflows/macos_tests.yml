@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download requirements
-        run: brew install meson
+        run: brew install meson catch2
 
       - name: Build project
         run: meson setup build
