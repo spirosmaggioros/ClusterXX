@@ -239,12 +239,12 @@ std::vector<std::vector<double>> clusterxx::TSNE<Metric>::fit_transform(
 }
 
 template <typename Metric>
-std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() {
+std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() const {
     return __shape;
 }
 
 template <typename Metric>
-std::vector<std::vector<double>> clusterxx::TSNE<Metric>::get_features() {
+std::vector<std::vector<double>> clusterxx::TSNE<Metric>::get_features() const {
     return __features;
 }
 

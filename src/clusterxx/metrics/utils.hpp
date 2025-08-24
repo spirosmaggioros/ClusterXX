@@ -8,7 +8,8 @@
 template <typename Metric>
 std::vector<std::vector<double>>
 compute_pairwise_distances(const std::vector<std::vector<double>> &X,
-                           const std::vector<std::vector<double>> Y = {}) {
+                           const std::vector<std::vector<double>> Y = {},
+                           const bool squared = true) {
     Metric metric;
 
     if (Y.empty()) { // only compute pairwise distances for X

@@ -49,8 +49,8 @@ class TSNE : manifold_method {
     void fit(const std::vector<std::vector<double>> &X) override;
     std::vector<std::vector<double>>
     fit_transform(const std::vector<std::vector<double>> &X) override;
-    std::pair<int, int> get_shape();
-    std::vector<std::vector<double>> get_features();
+    std::pair<int, int> get_shape() const;
+    std::vector<std::vector<double>> get_features() const;
 };
 } // namespace clusterxx
 
