@@ -19,7 +19,7 @@ struct euclidean_distance {
         for (size_t i = 0; i < X.size(); i++) {
             dist += (X[i] - Y[i]) * (X[i] - Y[i]);
         }
-        
+
         return sqrt(dist);
     }
 };
@@ -78,9 +78,10 @@ struct manhattan_distances {
 
 struct squared_euclidean_distances {
     std::vector<std::vector<double>>
-    operator ()(const std::vector<std::vector<double>> &X,
-                const std::vector<std::vector<double>> Y = {}) const {
-        return compute_pairwise_distances<clusterxx::metrics::squared_euclidean_distance>(X, Y);
+    operator()(const std::vector<std::vector<double>> &X,
+               const std::vector<std::vector<double>> Y = {}) const {
+        return compute_pairwise_distances<
+            clusterxx::metrics::squared_euclidean_distance>(X, Y);
     }
 };
 } // namespace pairwise_distances

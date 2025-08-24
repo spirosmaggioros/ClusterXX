@@ -33,7 +33,8 @@ class KMeans : cluster_method {
     std::vector<std::vector<double>> __recalc_centroids();
 
   public:
-    KMeans(int n_clusters = 8, int max_iter = 300, std::string init = "k-means++",
+    KMeans(int n_clusters = 8, int max_iter = 300,
+           std::string init = "k-means++",
            std::optional<int> random_state = std::nullopt)
         : __n_clusters(n_clusters), __max_iter(max_iter), __init(init),
           __random_state(random_state) {
