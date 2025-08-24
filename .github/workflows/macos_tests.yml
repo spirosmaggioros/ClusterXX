@@ -34,5 +34,5 @@ jobs:
       - name: Compile project
         run: meson compile -C build
       - name: Run unit tests
-        run: meson tests -C build
+        run: meson test -C build
 
