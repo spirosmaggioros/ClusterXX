@@ -15,6 +15,7 @@ class TSNE : manifold_method {
     int __n_components;
     double __perplexity;
     double __learning_rate;
+    double __early_exaggeration;
     int __max_iter;
     double __momentum = 0.5;
     Metric metric;
@@ -26,9 +27,8 @@ class TSNE : manifold_method {
     double __compute_sigma(const std::vector<double> &distances,
                            double target_perplexity, double tolerance = 1e-5,
                            int max_iter = 100);
-    std::vector<std::vector<double>>
-    __compute_pairwise_affinities(const std::vector<std::vector<double>> &features,
-                                  double perplexity);
+    std::vector<std::vector<double>> __compute_pairwise_affinities(
+        const std::vector<std::vector<double>> &features, double perplexity);
     std::vector<std::vector<double>>
     __compute_low_dim_affinities(const std::vector<std::vector<double>> &Y);
     std::vector<std::vector<double>> __kullback_leibler_gradient(
@@ -38,11 +38,16 @@ class TSNE : manifold_method {
 
   public:
     TSNE(int n_components = 2, double perplexity = 30.0,
-         double learning_rate = 100, int max_iter = 1000)
+         double learning_rate = 100, double early_exaggeration = 4.0,
+         int max_iter = 1000)
         : __n_components(n_components), __perplexity(perplexity),
-          __learning_rate(learning_rate), __max_iter(max_iter) {
+          __learning_rate(learning_rate),
+          __early_exaggeration(early_exaggeration), __max_iter(max_iter) {
         assert(n_components > 1);
-        assert(__learning_rate > 0.0);
+        assert(perplexity > 0);
+        assert(learning_rate > 0.0);
+        assert(early_exaggeration >= 1.0);
+        assert(max_iter >= 20);
     }
     ~TSNE() {}
 

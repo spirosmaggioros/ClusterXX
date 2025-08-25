@@ -138,7 +138,8 @@ clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
             if (i != j) {
                 double factor =
                     4.0 *
-                    (pairwise_affinities[i][j] - low_dim_affinities[i][j]) /
+                    ((__early_exaggeration * pairwise_affinities[i][j]) -
+                     low_dim_affinities[i][j]) /
                     (1.0 + metric(low_dim_features[i], low_dim_features[j]));
 
                 for (size_t k = 0; k < low_dim_features[0].size(); k++) {
@@ -184,7 +185,11 @@ void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
     std::vector<std::vector<std::vector<double>>> solution_hist;
 
     for (int i = 0; i < __max_iter; i++) {
-
+        if (i == static_cast<int>(__max_iter / 20)) {
+            // end early exaggeration after __max_iter / 20(default, 20
+            // iterations)
+            __early_exaggeration = 1.0;
+        }
         if (i == static_cast<int>(0.25 * __max_iter)) [[unlikely]] {
             // increase momentum after 1/4 of the iterations
             __momentum = 0.8;
