@@ -9,7 +9,7 @@
 #include "clusterxx/metrics/metrics.hpp"
 
 namespace clusterxx {
-template <typename Metric = clusterxx::metrics::euclidean_distance>
+template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
 class TSNE : manifold_method {
   private:
     int __n_components;
@@ -24,9 +24,9 @@ class TSNE : manifold_method {
     std::vector<std::vector<double>> __features;
 
     void __fit(const std::vector<std::vector<double>> &X);
-    double __compute_sigma(const std::vector<double> &distances,
-                           double target_perplexity, double tolerance = 1e-5,
-                           int max_iter = 100);
+    double __compute_sigma(const std::vector<std::vector<double>> &distances,
+                           double target_perplexity, int iter,
+                           double tolerance = 1e-5, int max_iter = 50);
     std::vector<std::vector<double>> __compute_pairwise_affinities(
         const std::vector<std::vector<double>> &features, double perplexity);
     std::vector<std::vector<double>>

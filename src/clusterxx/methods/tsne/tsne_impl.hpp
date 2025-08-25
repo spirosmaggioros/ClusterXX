@@ -3,21 +3,22 @@
 
 #include "tsne.hpp"
 #include <random>
+#include <iostream>
 
 template <typename Metric>
 double
-clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<double> &distances,
-                                         double target_perplexity,
+clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<std::vector<double>> &distances,
+                                         double target_perplexity, int iter,
                                          double tolerance, int max_iter) {
-    double sigma_lo = 1e-20, sigma_hi = 1e20;
+    double sigma_lo = 1e-10, sigma_hi = 1e10;
     double sigma = 1.0;
 
     while (max_iter--) {
         double sum_exp = 0.0, sum_exp_tot = 0.0;
-        for (size_t j = 0; j < distances.size(); j++) {
-            double exp = std::exp(-1.0 * distances[j] / (2.0 * sigma * sigma));
+        for (size_t j = 0; j < distances[iter].size(); j++) {
+            double exp = std::exp(-1.0 * distances[iter][j] / (2.0 * sigma * sigma));
             sum_exp += exp;
-            sum_exp_tot += distances[j] * exp;
+            sum_exp_tot += distances[iter][j] * exp;
         }
 
         if (sum_exp == 0) {
@@ -51,15 +52,10 @@ clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
     const std::vector<std::vector<double>> &features, double perplexity) {
     std::vector<std::vector<double>> p_ji(features.size(),
                                           std::vector<double>(features.size()));
+    std::vector<std::vector<double>> pairwise_dists = metric(features);
     for (size_t i = 0; i < features.size(); i++) {
-        std::vector<double> distances;
-        for (size_t j = 0; j < features.size(); j++) {
-            if (i != j) {
-                distances.push_back(metric(features[i], features[j]));
-            }
-        }
-
-        double sigma = __compute_sigma(distances, perplexity);
+        std::cout << "i am at iteration: " << i << " / " << features.size() << '\n';
+        double sigma = __compute_sigma(pairwise_dists, perplexity, i);
 
         double sum = 0.0;
         size_t dist_idx = 0;
@@ -67,16 +63,15 @@ clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
             if (i == j) [[unlikely]] {
                 p_ji[i][j] = 0.0;
             } else {
-                p_ji[i][j] = std::exp(-1.0 * distances[dist_idx] /
+                p_ji[i][j] = std::exp(-1.0 * pairwise_dists[i][dist_idx] /
                                       (2.0 * sigma * sigma));
                 sum += p_ji[i][j];
                 dist_idx++;
             }
         }
-
-        for (size_t j = 0; j < features.size(); j++) {
-            if (sum > 0) {
-                p_ji[i][j] /= sum;
+        if (sum > 0) {
+            for (auto &p: p_ji[i]) {
+                p /= sum;
             }
         }
     }
@@ -90,21 +85,15 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(
     const std::vector<std::vector<double>> &Y) {
     std::vector<std::vector<double>> q_ij(Y.size(),
                                           std::vector<double>(Y.size()));
-    std::vector<double> distances;
+    std::vector<std::vector<double>> pairwise_dists = metric(Y);
     for (size_t i = 0; i < Y.size(); i++) {
-        for (size_t j = 0; j < Y.size(); j++) {
-            if (i != j) {
-                distances.push_back(metric(Y[i], Y[j]));
-            }
-        }
-
         size_t dist_idx = 0;
         double sum = 0.0;
         for (size_t j = 0; j < Y.size(); j++) {
             if (i == j) [[unlikely]] {
                 q_ij[i][j] = 0.0;
             } else {
-                q_ij[i][j] = 1.0 / (1.0 + distances[dist_idx]);
+                q_ij[i][j] = 1.0 / (1.0 + pairwise_dists[i][dist_idx]);
                 sum += q_ij[i][j];
                 dist_idx++;
             }
@@ -129,6 +118,7 @@ clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
     assert(pairwise_affinities.size() == low_dim_affinities.size());
     assert(pairwise_affinities[0].size() == low_dim_affinities[0].size());
 
+    std::vector<std::vector<double>> pairwise_dists = metric(low_dim_features);
     std::vector<std::vector<double>> gradient(
         pairwise_affinities.size(),
         std::vector<double>(low_dim_features[0].size()));
@@ -140,7 +130,7 @@ clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
                     4.0 *
                     ((__early_exaggeration * pairwise_affinities[i][j]) -
                      low_dim_affinities[i][j]) /
-                    (1.0 + metric(low_dim_features[i], low_dim_features[j]));
+                    (1.0 + pairwise_dists[i][j]);
 
                 for (size_t k = 0; k < low_dim_features[0].size(); k++) {
                     gradient[i][k] += factor * (low_dim_features[i][k] -
@@ -158,7 +148,6 @@ void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
     assert(!X.empty());
     assert(__n_components < X[0].size());
     assert(__perplexity < X.size());
-
     // compute pairwise affinities
     std::vector<std::vector<double>> p_ji =
         __compute_pairwise_affinities(X, __perplexity);
@@ -185,6 +174,7 @@ void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
     std::vector<std::vector<std::vector<double>>> solution_hist;
 
     for (int i = 0; i < __max_iter; i++) {
+        std::cout << " im at iter: " << i << '\n';
         if (i == static_cast<int>(__max_iter / 20)) {
             // end early exaggeration after __max_iter / 20(default, 20
             // iterations)

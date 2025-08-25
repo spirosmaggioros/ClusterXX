@@ -14,7 +14,7 @@ foreach test_name, test_source : tests
     test_exe = executable(
         test_name,
         test_source,
-        dependencies: [clusterxx_dep, catch2_dep],
+        dependencies: [clusterxx_dep, catch2_dep, libclusterxx],
         cpp_args: ['-std=c++23'],
         install: false
     )

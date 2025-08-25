@@ -10,8 +10,6 @@
 #include <vector>
 
 namespace clusterxx {
-// Now this class will only support random initialization, i will implement
-// kmeans++ some day
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
 class KMeans : cluster_method {
   private:
