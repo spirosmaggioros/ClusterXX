@@ -8,6 +8,7 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
+#include <armadillo>
 
 namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
@@ -15,20 +16,20 @@ class KMeans : cluster_method {
   private:
     Metric metric;
     std::unordered_map<int, std::vector<int>> __assignments;
-    std::vector<std::vector<double>> __centroids;
+    arma::mat __centroids;
     std::vector<int> __labels;
 
     int __n_clusters;
     int __max_iter;
     std::string __init;
-    std::vector<std::vector<double>> __features;
+    arma::mat __features;
 
     std::optional<int> __random_state;
 
-    void __fit(const std::vector<std::vector<double>> &X);
-    void __init_centroids(std::vector<std::vector<double>> features);
-    void __assign_labels(const std::vector<std::vector<double>> &X);
-    std::vector<std::vector<double>> __recalc_centroids();
+    void __fit(const arma::mat &X);
+    void __init_centroids(arma::mat features);
+    void __assign_labels(const arma::mat &X);
+    arma::mat __recalc_centroids();
 
   public:
     KMeans(int n_clusters = 8, int max_iter = 300,
@@ -42,13 +43,13 @@ class KMeans : cluster_method {
 
     ~KMeans() {}
 
-    void fit(const std::vector<std::vector<double>> &X) override;
+    void fit(const arma::mat &X) override;
     std::vector<int>
-    fit_predict(const std::vector<std::vector<double>> &X) override;
+    fit_predict(const arma::mat &X) override;
     std::vector<int>
-    predict(const std::vector<std::vector<double>> &X) override;
+    predict(const arma::mat &X) override;
     std::vector<int> get_labels() const;
-    std::vector<std::vector<double>> get_centroids() const;
+    arma::mat get_centroids() const;
 };
 } // namespace clusterxx
 

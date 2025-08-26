@@ -9,36 +9,36 @@
 
 template <typename Metric>
 void clusterxx::KMeans<Metric>::__init_centroids(
-    std::vector<std::vector<double>> features) {
+    arma::mat features) {
     if (__init == "random") {
+        __centroids.resize(__n_clusters, features.n_cols);
         int seed = __random_state.value_or(-1);
+        arma::mat shuffled;
         if (seed == -1) {
-            std::random_device r;
-            std::default_random_engine el(r());
-            std::shuffle(features.begin(), features.end(), el);
+            shuffled = arma::shuffle(features);
         } else {
-            std::default_random_engine el(seed);
-            std::shuffle(features.begin(), features.end(), el);
+            arma::arma_rng::set_seed(seed);
+            shuffled = arma::shuffle(features);
         }
-
         for (int i = 0; i < __n_clusters; i++) {
-            __centroids.push_back(features[i]);
+            __centroids.row(i) = shuffled.row(i);
         }
     } else { // k-means++
+        __centroids.resize(1, features.n_cols);
+        int _rand = rand() % (__features.n_rows - 1);
+        int _curr_idx = 0;
+        __centroids.row(_curr_idx++) = __features.row(_rand);
         clusterxx::pairwise_distances::squared_euclidean_distances
             squared_eucl_dist;
-        std::ranges::sample(__features, std::back_inserter(__centroids), 1,
-                            std::mt19937{std::random_device{}()});
-        while (__centroids.size() < __n_clusters) {
-            std::vector<std::vector<double>> pairwise_dist =
+        while (__centroids.n_rows < __n_clusters) {
+            arma::mat pairwise_dist =
                 squared_eucl_dist(__features, __centroids);
             std::vector<double> probs;
             double probs_sum = 0.0;
-            for (size_t i = 0; i < pairwise_dist.size(); i++) {
-                auto min_element = std::ranges::min_element(
-                    pairwise_dist[i].begin(), pairwise_dist[i].end());
-                probs.push_back(*min_element);
-                probs_sum += *min_element;
+            for (size_t i = 0; i < pairwise_dist.n_rows; i++) {
+                auto min_element = pairwise_dist.row(i).min();
+                probs.push_back(min_element);
+                probs_sum += min_element;
             }
 
             auto dist_compare = [&probs_sum](double a, double b) {
@@ -46,42 +46,39 @@ void clusterxx::KMeans<Metric>::__init_centroids(
             };
             auto max_prob = std::ranges::max_element(probs, dist_compare);
             int selected = std::ranges::distance(probs.begin(), max_prob);
-            __centroids.push_back(__features[selected]);
+            __centroids.insert_rows(__centroids.n_rows - 1, 1);
+            __centroids.row(_curr_idx++) = __features.row(selected);
         }
     }
 }
 
 template <typename Metric>
 void clusterxx::KMeans<Metric>::__assign_labels(
-    const std::vector<std::vector<double>> &X) {
-    const std::vector<std::vector<double>> pairwise_dist =
-        metric(X, __centroids);
-    for (size_t feat = 0; feat < pairwise_dist.size(); feat++) {
-        auto min_element = std::ranges::min_element(pairwise_dist[feat].begin(),
-                                                    pairwise_dist[feat].end());
-        auto selected_centroid =
-            std::ranges::distance(pairwise_dist[feat].begin(), min_element);
+    const arma::mat &X) {
+    const arma::mat pairwise_dist = metric(X, __centroids);
+    for (size_t feat = 0; feat < pairwise_dist.n_rows; feat++) {
+        auto selected_centroid = pairwise_dist.row(feat).index_min();
         __assignments[selected_centroid].push_back(feat);
         __labels[feat] = selected_centroid;
     }
 }
 
 template <typename Metric>
-std::vector<std::vector<double>>
-clusterxx::KMeans<Metric>::__recalc_centroids() {
-    std::vector<std::vector<double>> new_centroids;
+arma::mat clusterxx::KMeans<Metric>::__recalc_centroids() {
+    arma::mat new_centroids(__n_clusters, __features.n_cols);
+    int _idx = 0;
     for (const auto &[centroid, points] : __assignments) {
-        std::vector<double> _curr_mean(__features[0].size(), 0.0);
+        arma::vec _curr_mean(__features.n_cols);
         for (const auto &point : points) {
-            for (size_t i = 0; i < __features[0].size(); i++) {
-                _curr_mean[i] += __features[point][i];
+            for (size_t i = 0; i < __features.n_cols; i++) {
+                _curr_mean(i) += __features(point, i);
             }
         }
 
         for (auto &x : _curr_mean) {
             x /= int(points.size());
         }
-        new_centroids.push_back(_curr_mean);
+        new_centroids.row(_idx++) = _curr_mean.t();
     }
 
     return new_centroids;
@@ -89,20 +86,20 @@ clusterxx::KMeans<Metric>::__recalc_centroids() {
 
 template <typename Metric>
 void clusterxx::KMeans<Metric>::__fit(
-    const std::vector<std::vector<double>> &X) {
+    const arma::mat &X) {
     assert(!X.empty());
-    assert(__n_clusters <= X.size());
+    assert(__n_clusters <= X.n_rows);
 
     __features = X;
-    __labels.resize(__features.size());
+    __labels.resize(__features.n_rows);
     __init_centroids(X);
 
     for (int i = 0; i < __max_iter; i++) {
         __assignments.clear();
         __assign_labels(__features);
 
-        std::vector<std::vector<double>> new_centroids = __recalc_centroids();
-        if (new_centroids == __centroids) {
+        arma::mat new_centroids = __recalc_centroids();
+        if (arma::approx_equal(__centroids, new_centroids, "absdiff", 1e-5)) {
             break;
         }
 
@@ -111,23 +108,23 @@ void clusterxx::KMeans<Metric>::__fit(
 }
 
 template <typename Metric>
-void clusterxx::KMeans<Metric>::fit(const std::vector<std::vector<double>> &X) {
+void clusterxx::KMeans<Metric>::fit(const arma::mat &X) {
     __fit(X);
 }
 
 template <typename Metric>
 std::vector<int> clusterxx::KMeans<Metric>::fit_predict(
-    const std::vector<std::vector<double>> &X) {
+    const arma::mat &X) {
     __fit(X);
     return __labels;
 }
 
 template <typename Metric>
 std::vector<int>
-clusterxx::KMeans<Metric>::predict(const std::vector<std::vector<double>> &X) {
+clusterxx::KMeans<Metric>::predict(const arma::mat &X) {
     assert(!X.empty());
     assert(!__centroids.empty());
-    assert(__centroids[0].size() == X[0].size());
+    assert(__centroids.n_cols == X.n_cols);
 
     __labels.clear();
     __labels.resize(X.size());
@@ -143,8 +140,7 @@ std::vector<int> clusterxx::KMeans<Metric>::get_labels() const {
 }
 
 template <typename Metric>
-std::vector<std::vector<double>>
-clusterxx::KMeans<Metric>::get_centroids() const {
+arma::mat clusterxx::KMeans<Metric>::get_centroids() const {
     assert(!__labels.empty());
     assert(!__centroids.empty());
     return __centroids;
