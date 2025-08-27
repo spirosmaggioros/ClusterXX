@@ -7,6 +7,7 @@ clusterxx_dep = declare_dependency(
 tests = {
     'metrics_tests': 'metrics_tests.cc',
     'kmeans_tests': 'kmeans_tests.cc',
+    'tsne_tests': 'tsne_tests.cc',
 }
 
 foreach test_name, test_source : tests
