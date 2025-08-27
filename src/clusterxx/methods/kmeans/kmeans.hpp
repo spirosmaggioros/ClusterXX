@@ -4,11 +4,11 @@
 #include "clusterxx/base/cluster_method.hpp"
 #include "clusterxx/metrics/metrics.hpp"
 
+#include <armadillo>
 #include <assert.h>
 #include <optional>
 #include <unordered_map>
 #include <vector>
-#include <armadillo>
 
 namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
@@ -44,10 +44,8 @@ class KMeans : cluster_method {
     ~KMeans() {}
 
     void fit(const arma::mat &X) override;
-    std::vector<int>
-    fit_predict(const arma::mat &X) override;
-    std::vector<int>
-    predict(const arma::mat &X) override;
+    std::vector<int> fit_predict(const arma::mat &X) override;
+    std::vector<int> predict(const arma::mat &X) override;
     std::vector<int> get_labels() const;
     arma::mat get_centroids() const;
 };

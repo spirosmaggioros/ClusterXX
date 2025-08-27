@@ -4,12 +4,10 @@
 #include "kmeans.hpp"
 #include <algorithm>
 #include <assert.h>
-#include <random>
 #include <ranges>
 
 template <typename Metric>
-void clusterxx::KMeans<Metric>::__init_centroids(
-    arma::mat features) {
+void clusterxx::KMeans<Metric>::__init_centroids(arma::mat features) {
     if (__init == "random") {
         __centroids.resize(__n_clusters, features.n_cols);
         int seed = __random_state.value_or(-1);
@@ -26,8 +24,8 @@ void clusterxx::KMeans<Metric>::__init_centroids(
     } else { // k-means++
         __centroids.resize(1, features.n_cols);
         int _rand = rand() % (__features.n_rows - 1);
-        int _curr_idx = 0;
-        __centroids.row(_curr_idx++) = __features.row(_rand);
+        int _curr_centroid_idx = 0;
+        __centroids.row(_curr_centroid_idx++) = __features.row(_rand);
         clusterxx::pairwise_distances::squared_euclidean_distances
             squared_eucl_dist;
         while (__centroids.n_rows < __n_clusters) {
@@ -47,14 +45,13 @@ void clusterxx::KMeans<Metric>::__init_centroids(
             auto max_prob = std::ranges::max_element(probs, dist_compare);
             int selected = std::ranges::distance(probs.begin(), max_prob);
             __centroids.insert_rows(__centroids.n_rows - 1, 1);
-            __centroids.row(_curr_idx++) = __features.row(selected);
+            __centroids.row(_curr_centroid_idx++) = __features.row(selected);
         }
     }
 }
 
 template <typename Metric>
-void clusterxx::KMeans<Metric>::__assign_labels(
-    const arma::mat &X) {
+void clusterxx::KMeans<Metric>::__assign_labels(const arma::mat &X) {
     const arma::mat pairwise_dist = metric(X, __centroids);
     for (size_t feat = 0; feat < pairwise_dist.n_rows; feat++) {
         auto selected_centroid = pairwise_dist.row(feat).index_min();
@@ -66,7 +63,7 @@ void clusterxx::KMeans<Metric>::__assign_labels(
 template <typename Metric>
 arma::mat clusterxx::KMeans<Metric>::__recalc_centroids() {
     arma::mat new_centroids(__n_clusters, __features.n_cols);
-    int _idx = 0;
+    int _curr_centroid_idx = 0;
     for (const auto &[centroid, points] : __assignments) {
         arma::vec _curr_mean(__features.n_cols);
         for (const auto &point : points) {
@@ -78,15 +75,14 @@ arma::mat clusterxx::KMeans<Metric>::__recalc_centroids() {
         for (auto &x : _curr_mean) {
             x /= int(points.size());
         }
-        new_centroids.row(_idx++) = _curr_mean.t();
+        new_centroids.row(_curr_centroid_idx++) = _curr_mean.t();
     }
 
     return new_centroids;
 }
 
 template <typename Metric>
-void clusterxx::KMeans<Metric>::__fit(
-    const arma::mat &X) {
+void clusterxx::KMeans<Metric>::__fit(const arma::mat &X) {
     assert(!X.empty());
     assert(__n_clusters <= X.n_rows);
 
@@ -113,15 +109,13 @@ void clusterxx::KMeans<Metric>::fit(const arma::mat &X) {
 }
 
 template <typename Metric>
-std::vector<int> clusterxx::KMeans<Metric>::fit_predict(
-    const arma::mat &X) {
+std::vector<int> clusterxx::KMeans<Metric>::fit_predict(const arma::mat &X) {
     __fit(X);
     return __labels;
 }
 
 template <typename Metric>
-std::vector<int>
-clusterxx::KMeans<Metric>::predict(const arma::mat &X) {
+std::vector<int> clusterxx::KMeans<Metric>::predict(const arma::mat &X) {
     assert(!X.empty());
     assert(!__centroids.empty());
     assert(__centroids.n_cols == X.n_cols);

@@ -1,16 +1,15 @@
 #ifndef CLUSTERXX_METRICS_METRICS_HPP
 #define CLUSTERXX_METRICS_METRICS_HPP
 
+#include <armadillo>
 #include <assert.h>
 #include <math.h>
 #include <vector>
-#include <armadillo>
 
 namespace clusterxx {
 namespace metrics {
 struct euclidean_distance {
-    double operator()(const arma::vec &X,
-                      const arma::vec &Y) const {
+    double operator()(const arma::vec &X, const arma::vec &Y) const {
         assert(!X.empty());
         assert(!Y.empty());
         assert(X.n_rows == Y.n_rows);
@@ -20,8 +19,7 @@ struct euclidean_distance {
 };
 
 struct squared_euclidean_distance {
-    double operator()(const arma::vec &X,
-                      const arma::vec &Y) const {
+    double operator()(const arma::vec &X, const arma::vec &Y) const {
         assert(!X.empty());
         assert(!Y.empty());
         assert(X.n_rows == Y.n_rows);
@@ -31,8 +29,7 @@ struct squared_euclidean_distance {
 };
 
 struct chebyshev_distance {
-    double operator()(const arma::vec &X,
-                      const arma::vec &Y) const {
+    double operator()(const arma::vec &X, const arma::vec &Y) const {
         assert(!X.empty());
         assert(!Y.empty());
         assert(X.n_rows == Y.n_rows);
@@ -42,8 +39,7 @@ struct chebyshev_distance {
 };
 
 struct manhattan_distance {
-    double operator()(const arma::vec &X,
-                      const arma::vec &Y) const {
+    double operator()(const arma::vec &X, const arma::vec &Y) const {
         assert(!X.empty());
         assert(!Y.empty());
         assert(X.n_rows == Y.n_rows);
@@ -55,9 +51,7 @@ struct manhattan_distance {
 
 namespace pairwise_distances {
 struct euclidean_distances {
-    arma::mat
-    operator()(const arma::mat &X,
-               const arma::mat &Y) const {
+    arma::mat operator()(const arma::mat &X, const arma::mat &Y) const {
         assert(!X.empty());
 
         arma::mat _X = X;
@@ -80,10 +74,9 @@ struct euclidean_distances {
 };
 
 struct manhattan_distances {
-    arma::mat
-    operator()(const arma::mat &X, const arma::mat &Y) const {
+    arma::mat operator()(const arma::mat &X, const arma::mat &Y) const {
         assert(!X.empty());
-        
+
         arma::mat _X = X;
         arma::mat _Y;
 
@@ -96,7 +89,8 @@ struct manhattan_distances {
         arma::mat distances(_X.n_rows, _Y.n_rows);
 
         for (arma::uword i = 0; i < _X.n_rows; i++) {
-            arma::mat diff = arma::abs(arma::repmat(_X.row(i), _Y.n_rows, 1) - _Y);
+            arma::mat diff =
+                arma::abs(arma::repmat(_X.row(i), _Y.n_rows, 1) - _Y);
             distances.row(i) = arma::sum(diff, 1).t();
         }
 
@@ -105,8 +99,7 @@ struct manhattan_distances {
 };
 
 struct squared_euclidean_distances {
-    arma::mat
-    operator()(const arma::mat &X, const arma::mat &Y) const {
+    arma::mat operator()(const arma::mat &X, const arma::mat &Y) const {
         assert(!X.empty());
 
         arma::mat _X = X;
@@ -122,15 +115,12 @@ struct squared_euclidean_distances {
         arma::mat dot_prod = _X * _Y.t();
 
         return arma::repmat(norm_x, 1, Y.n_rows) +
-                         arma::repmat(norm_y.t(), X.n_rows, 1) -
-                         2 * dot_prod;
+               arma::repmat(norm_y.t(), X.n_rows, 1) - 2 * dot_prod;
     }
 };
 
 struct chebyshev_distances {
-    arma::mat
-    operator ()(const arma::mat &X,
-                const arma::mat &Y) const {
+    arma::mat operator()(const arma::mat &X, const arma::mat &Y) const {
         assert(!X.empty());
 
         arma::mat _X = X;
@@ -144,7 +134,8 @@ struct chebyshev_distances {
         arma::mat distances(_X.n_rows, _Y.n_rows);
 
         for (arma::uword i = 0; i < _X.n_rows; i++) {
-            arma::mat diff = arma::abs(arma::repmat(_X.row(i), _Y.n_rows, 1) - _Y);
+            arma::mat diff =
+                arma::abs(arma::repmat(_X.row(i), _Y.n_rows, 1) - _Y);
             distances.row(i) = arma::max(diff, 1);
         }
 
