@@ -1,10 +1,10 @@
 #ifndef CLUSTERXX_METRICS_METRICS_HPP
 #define CLUSTERXX_METRICS_METRICS_HPP
+#define ARMA_USE_BLAS
 
 #include <armadillo>
 #include <assert.h>
 #include <math.h>
-#include <vector>
 
 namespace clusterxx {
 namespace metrics {
@@ -51,7 +51,7 @@ struct manhattan_distance {
 
 namespace pairwise_distances {
 struct euclidean_distances {
-    arma::mat operator()(const arma::mat &X, const arma::mat &Y) const {
+    arma::mat operator()(const arma::mat &X, const arma::mat &Y) {
         assert(!X.empty());
 
         arma::mat _X = X;
@@ -68,8 +68,8 @@ struct euclidean_distances {
         arma::mat dot_prod = _X * _Y.t();
 
         return arma::sqrt(arma::repmat(norm_x, 1, _Y.n_rows) +
-                          arma::repmat(norm_y.t(), _X.n_rows, 1) -
-                          2 * dot_prod);
+                        arma::repmat(norm_y.t(), _X.n_rows, 1) -
+                        2 * dot_prod);
     }
 };
 

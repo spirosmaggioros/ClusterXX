@@ -13,6 +13,7 @@ endif
 libclusterxx = declare_dependency(
     include_directories: clusterxx_inc,
     dependencies: [armadillo_dep],
+    link_args: ['-framework', 'Accelerate'],
 )
 
 install_headers('clusterxx.hpp', subdir: '')

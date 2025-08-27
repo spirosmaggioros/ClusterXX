@@ -2,6 +2,7 @@
 #define CLUSTERXX_BASE_MANIFOLD_METHOD_HPP
 
 #include <vector>
+#include <armadillo>
 
 namespace clusterxx {
 class manifold_method {
@@ -13,9 +14,8 @@ class manifold_method {
     manifold_method &operator=(const manifold_method &) = default;
     manifold_method &operator=(manifold_method &&) = default;
 
-    virtual void fit(const std::vector<std::vector<double>> &X) = 0;
-    virtual std::vector<std::vector<double>>
-    fit_transform(const std::vector<std::vector<double>> &X) = 0;
+    virtual void fit(const arma::mat &X) = 0;
+    virtual arma::mat fit_transform(const arma::mat &X) = 0;
 };
 } // namespace clusterxx
 

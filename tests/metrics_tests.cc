@@ -39,25 +39,38 @@ TEST_CASE("Testing euclidean pairwise distances", "[metrics]") {
     }
 }
 
-TEST_CASE("Stress testing euclidean distance", "[metrics]") {
-    clusterxx::pairwise_distances::euclidean_distances dist;
-
-    arma::mat X(20000, 30);
-    for (int i = 0; i < 20000; i++) {
-        std::vector<double> features;
-        for (int j = 0; j < 30; j++) {
-            features.push_back(rand() % 100);
-        }
-        X.row(i) = arma::vec(features).t();
-    }
-    
-    auto t1 = std::chrono::high_resolution_clock::now();
-    arma::mat pairwise_dists_linear = dist(X, arma::mat());
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-
-    std::cout << ms_double << '\n';
-}
+// TEST_CASE("Stress testing euclidean distance", "[metrics]") {
+//     clusterxx::pairwise_distances::euclidean_distances dist;
+// 
+//     arma::mat X(5000, 30);
+//     for (int i = 0; i < 5000; i++) {
+//         std::vector<double> features;
+//         for (int j = 0; j < 30; j++) {
+//             features.push_back(rand() % 100);
+//         }
+//         X.row(i) = arma::vec(features).t();
+//     }
+//     
+//     // auto t1 = std::chrono::high_resolution_clock::now();
+//     arma::mat pairwise_dists_linear = dist(X, arma::mat());
+//     // auto t2 = std::chrono::high_resolution_clock::now();
+//     // std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+// 
+//     arma::mat X_big(20000, 30);
+//     for (int i = 0; i < 20000; i++) {
+//         std::vector<double> features;
+//         for (int j = 0; j < 30; j++) {
+//             features.push_back(rand() % 100);
+//         }
+//         X_big.row(i) = arma::vec(features).t();
+//     }
+// 
+//     auto t1 = std::chrono::high_resolution_clock::now();
+//     arma::mat pairwise_dists_big = dist(X_big, arma::mat());
+//     auto t2 = std::chrono::high_resolution_clock::now();
+//     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+//     std::cout << ms_double << '\n';
+// }
 
 TEST_CASE("Testing manhattan distance", "[metrics]") {
     REQUIRE(true == true);

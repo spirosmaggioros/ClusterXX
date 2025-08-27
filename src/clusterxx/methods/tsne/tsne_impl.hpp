@@ -3,11 +3,10 @@
 
 #include "tsne.hpp"
 #include <random>
-#include <iostream>
 
 template <typename Metric>
 double
-clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<std::vector<double>> &distances,
+clusterxx::TSNE<Metric>::__compute_sigma(const arma::mat &distances,
                                          double target_perplexity, int iter,
                                          double tolerance, int max_iter) {
     double sigma_lo = 1e-10, sigma_hi = 1e10;
@@ -15,10 +14,10 @@ clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<std::vector<double>> 
 
     while (max_iter--) {
         double sum_exp = 0.0, sum_exp_tot = 0.0;
-        for (size_t j = 0; j < distances[iter].size(); j++) {
-            double exp = std::exp(-1.0 * distances[iter][j] / (2.0 * sigma * sigma));
+        for (size_t j = 0; j < distances.row(iter).n_rows; j++) {
+            double exp = std::exp(-1.0 * distances(iter, j) / (2.0 * sigma * sigma));
             sum_exp += exp;
-            sum_exp_tot += distances[iter][j] * exp;
+            sum_exp_tot += distances(iter, j) * exp;
         }
 
         if (sum_exp == 0) {
@@ -47,30 +46,28 @@ clusterxx::TSNE<Metric>::__compute_sigma(const std::vector<std::vector<double>> 
 }
 
 template <typename Metric>
-std::vector<std::vector<double>>
-clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
-    const std::vector<std::vector<double>> &features, double perplexity) {
-    std::vector<std::vector<double>> p_ji(features.size(),
-                                          std::vector<double>(features.size()));
-    std::vector<std::vector<double>> pairwise_dists = metric(features);
-    for (size_t i = 0; i < features.size(); i++) {
+arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
+    const arma::mat &features, double perplexity) {
+    arma::mat p_ji(features.n_rows, features.n_rows);
+    arma::mat pairwise_dists = metric(features, arma::mat());
+    for (size_t i = 0; i < features.n_rows; i++) {
         std::cout << "i am at iteration: " << i << " / " << features.size() << '\n';
         double sigma = __compute_sigma(pairwise_dists, perplexity, i);
 
         double sum = 0.0;
         size_t dist_idx = 0;
-        for (size_t j = 0; j < features.size(); j++) {
+        for (size_t j = 0; j < features.n_rows; j++) {
             if (i == j) [[unlikely]] {
-                p_ji[i][j] = 0.0;
+                p_ji(i, j) = 0.0;
             } else {
-                p_ji[i][j] = std::exp(-1.0 * pairwise_dists[i][dist_idx] /
+                p_ji(i, j) = std::exp(-1.0 * pairwise_dists(i, dist_idx) /
                                       (2.0 * sigma * sigma));
-                sum += p_ji[i][j];
+                sum += p_ji(i, j);
                 dist_idx++;
             }
         }
         if (sum > 0) {
-            for (auto &p: p_ji[i]) {
+            for (auto &p: p_ji.row(i)) {
                 p /= sum;
             }
         }
@@ -80,28 +77,25 @@ clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 }
 
 template <typename Metric>
-std::vector<std::vector<double>>
-clusterxx::TSNE<Metric>::__compute_low_dim_affinities(
-    const std::vector<std::vector<double>> &Y) {
-    std::vector<std::vector<double>> q_ij(Y.size(),
-                                          std::vector<double>(Y.size()));
-    std::vector<std::vector<double>> pairwise_dists = metric(Y);
-    for (size_t i = 0; i < Y.size(); i++) {
+arma::mat clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
+    arma::mat q_ij(Y.n_rows, Y.n_rows);
+    arma::mat pairwise_dists = metric(Y, arma::mat());
+    for (size_t i = 0; i < Y.n_rows; i++) {
         size_t dist_idx = 0;
         double sum = 0.0;
-        for (size_t j = 0; j < Y.size(); j++) {
+        for (size_t j = 0; j < Y.n_rows; j++) {
             if (i == j) [[unlikely]] {
-                q_ij[i][j] = 0.0;
+                q_ij(i, j) = 0.0;
             } else {
-                q_ij[i][j] = 1.0 / (1.0 + pairwise_dists[i][dist_idx]);
-                sum += q_ij[i][j];
+                q_ij(i, j) = 1.0 / (1.0 + pairwise_dists(i, dist_idx));
+                sum += q_ij(i, j);
                 dist_idx++;
             }
         }
 
-        for (size_t j = 0; j < Y.size(); j++) {
-            if (sum > 0) {
-                q_ij[i][j] /= sum;
+        if (sum > 0) {
+            for (auto &q: q_ij.row(i)) {
+                q /= sum;
             }
         }
     }
@@ -110,31 +104,28 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(
 }
 
 template <typename Metric>
-std::vector<std::vector<double>>
-clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
-    const std::vector<std::vector<double>> &pairwise_affinities,
-    const std::vector<std::vector<double>> &low_dim_affinities,
-    const std::vector<std::vector<double>> &low_dim_features) {
-    assert(pairwise_affinities.size() == low_dim_affinities.size());
-    assert(pairwise_affinities[0].size() == low_dim_affinities[0].size());
+arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
+    const arma::mat &pairwise_affinities,
+    const arma::mat &low_dim_affinities,
+    const arma::mat &low_dim_features) {
+    assert(pairwise_affinities.n_rows == low_dim_affinities.n_rows);
+    assert(pairwise_affinities.n_cols == low_dim_affinities.n_cols);
 
-    std::vector<std::vector<double>> pairwise_dists = metric(low_dim_features);
-    std::vector<std::vector<double>> gradient(
-        pairwise_affinities.size(),
-        std::vector<double>(low_dim_features[0].size()));
+    arma::mat pairwise_dists = metric(low_dim_features, arma::mat());
+    arma::mat gradient(pairwise_affinities.n_rows, low_dim_features.n_cols);
 
-    for (size_t i = 0; i < pairwise_affinities.size(); i++) {
-        for (size_t j = 0; j < pairwise_affinities[0].size(); j++) {
-            if (i != j) {
+    for (size_t i = 0; i < pairwise_affinities.n_rows; i++) {
+        for (size_t j = 0; j < pairwise_affinities.n_cols; j++) {
+            if (i != j) [[likely]] {
                 double factor =
                     4.0 *
-                    ((__early_exaggeration * pairwise_affinities[i][j]) -
-                     low_dim_affinities[i][j]) /
-                    (1.0 + pairwise_dists[i][j]);
+                    ((__early_exaggeration * pairwise_affinities(i, j)) -
+                     low_dim_affinities(i, j)) /
+                    (1.0 + pairwise_dists(i, j));
 
-                for (size_t k = 0; k < low_dim_features[0].size(); k++) {
-                    gradient[i][k] += factor * (low_dim_features[i][k] -
-                                                low_dim_features[j][k]);
+                for (size_t k = 0; k < low_dim_features.n_cols; k++) {
+                    gradient(i, k) += factor * (low_dim_features(i, k) -
+                                                low_dim_features(j, k));
                 }
             }
         }
@@ -144,17 +135,17 @@ clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
 }
 
 template <typename Metric>
-void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
+void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     assert(!X.empty());
-    assert(__n_components < X[0].size());
-    assert(__perplexity < X.size());
+    assert(__n_components < X.n_cols);
+    assert(__perplexity < X.n_rows);
+
     // compute pairwise affinities
-    std::vector<std::vector<double>> p_ji =
-        __compute_pairwise_affinities(X, __perplexity);
-    std::vector<std::vector<double>> symmetrized = p_ji;
-    for (size_t i = 0; i < p_ji.size(); i++) {
-        for (size_t j = 0; j < p_ji[0].size(); j++) {
-            symmetrized[i][j] = (p_ji[i][j] + p_ji[j][i]) / (2.0 * X.size());
+    arma::mat p_ji = __compute_pairwise_affinities(X, __perplexity);
+    arma::mat symmetrized = p_ji;
+    for (size_t i = 0; i < p_ji.n_rows; i++) {
+        for (size_t j = 0; j < p_ji.n_cols; j++) {
+            symmetrized(i, j) = (p_ji(i, j) + p_ji(j, i)) / (2.0 * X.n_rows);
         }
     }
 
@@ -163,15 +154,14 @@ void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
     std::mt19937 gen(rd());
     std::normal_distribution<double> dist(0.0, 1e-4);
 
-    std::vector<std::vector<double>> solution(
-        X.size(), std::vector<double>(__n_components));
-    for (size_t i = 0; i < solution.size(); i++) {
+    arma::mat solution(X.n_rows, __n_components);
+    for (size_t i = 0; i < solution.n_rows; i++) {
         for (size_t j = 0; j < __n_components; j++) {
-            solution[i][j] = dist(gen);
+            solution(i, j) = dist(gen);
         }
     }
 
-    std::vector<std::vector<std::vector<double>>> solution_hist;
+    std::vector<arma::mat> solution_hist;
 
     for (int i = 0; i < __max_iter; i++) {
         std::cout << " im at iter: " << i << '\n';
@@ -186,49 +176,44 @@ void clusterxx::TSNE<Metric>::__fit(const std::vector<std::vector<double>> &X) {
         }
 
         // compute low dimensional affinities(q_ij)
-        std::vector<std::vector<double>> q_ij =
-            __compute_low_dim_affinities(solution);
+        arma::mat q_ij = __compute_low_dim_affinities(solution);
 
         // compute gradient
-        std::vector<std::vector<double>> gradients =
-            __kullback_leibler_gradient(symmetrized, q_ij, solution);
+        arma::mat gradients = __kullback_leibler_gradient(symmetrized, q_ij, solution);
 
         // update solution
-        for (size_t j = 0; j < solution.size(); j++) {
-            for (size_t k = 0; k < solution[j].size(); k++) {
+        for (size_t j = 0; j < solution.n_rows; j++) {
+            for (size_t k = 0; k < __n_components; k++) {
 
                 double momentum_factor = 0.0, previous_factor = 0.0;
                 if (i > 0) [[likely]] {
-                    previous_factor = solution_hist.back()[j][k];
+                    previous_factor = solution_hist.back()(j, k);
                 }
                 if (i > 1) [[likely]] {
                     momentum_factor =
-                        solution_hist.back()[j][k] -
-                        solution_hist[solution_hist.size() - 2][j][k];
+                        solution_hist.back()(j, k) -
+                        solution_hist[solution_hist.size() - 2](j, k);
                 }
-                solution[j][k] = previous_factor +
-                                 __learning_rate * gradients[j][k] +
+                solution(j, k) = previous_factor +
+                                 __learning_rate * gradients(j, k) +
                                  __momentum * momentum_factor;
             }
         }
         solution_hist.push_back(solution);
     }
 
-    for (auto &v : solution) {
-        __features.push_back(v);
-    }
-    __shape.first = solution.size();
+    __features = solution;
+    __shape.first = solution.n_rows;
     __shape.second = __n_components;
 }
 
 template <typename Metric>
-void clusterxx::TSNE<Metric>::fit(const std::vector<std::vector<double>> &X) {
+void clusterxx::TSNE<Metric>::fit(const arma::mat &X) {
     __fit(X);
 }
 
 template <typename Metric>
-std::vector<std::vector<double>> clusterxx::TSNE<Metric>::fit_transform(
-    const std::vector<std::vector<double>> &X) {
+arma::mat clusterxx::TSNE<Metric>::fit_transform(const arma::mat &X) {
     __fit(X);
     return __features;
 }
@@ -239,7 +224,7 @@ std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() const {
 }
 
 template <typename Metric>
-std::vector<std::vector<double>> clusterxx::TSNE<Metric>::get_features() const {
+arma::mat clusterxx::TSNE<Metric>::get_features() const {
     return __features;
 }
 
