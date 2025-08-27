@@ -143,9 +143,6 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         if (i == static_cast<int>(0.25 * __max_iter)) [[unlikely]] {
             // increase momentum after 1/4 of the iterations
             __momentum = 0.8;
-            if (n_iter_no_progress >= __n_iter_without_progress) {
-                break;
-            }
         }
 
         // compute low dimensional affinities(q_ij)
@@ -169,6 +166,10 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             } else {
                 n_iter_no_progress = 0;
                 best_loss = kl_loss;
+            }
+
+            if (n_iter_no_progress >= __n_iter_without_progress) {
+                break;
             }
         }
 
