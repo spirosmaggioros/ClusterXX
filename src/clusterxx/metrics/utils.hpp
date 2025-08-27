@@ -1,21 +1,19 @@
 #ifndef CLUSTERXX_METRICS_UTILS_HPP
 #define CLUSTERXX_METRICS_UTILS_HPP
 
+#include <algorithm>
 #include <armadillo>
 #include <assert.h>
 #include <math.h>
-#include <algorithm>
 #include <thread>
 #include <vector>
 
 #include <iostream>
 
 template <typename Metric>
-void __compute_partial(
-        const arma::mat &X,
-        const arma::mat &Y,
-        arma::mat &dist_vec,
-        const size_t &range_from, const size_t &range_to) {
+void __compute_partial(const arma::mat &X, const arma::mat &Y,
+                       arma::mat &dist_vec, const size_t &range_from,
+                       const size_t &range_to) {
     Metric metric;
 
     if (Y.empty()) {
@@ -40,7 +38,8 @@ void __compute_partial(
 }
 
 template <typename Metric>
-arma::mat __multithread_compute_pairwise(const arma::mat &X, const arma::mat &Y, const int n_workers) {
+arma::mat __multithread_compute_pairwise(const arma::mat &X, const arma::mat &Y,
+                                         const int n_workers) {
     arma::mat dist;
     if (Y.empty()) {
         dist.resize(X.n_rows, X.n_rows);
@@ -55,14 +54,15 @@ arma::mat __multithread_compute_pairwise(const arma::mat &X, const arma::mat &Y,
     for (int i = 0; i < n_workers; i++) {
         int range_to = std::min(range_from + window - 1, int(X.n_rows - 1));
         if (range_from <= range_to) {
-            threads.push_back(std::thread([&X, &Y, &range_from, &range_to, &dist]{
-                        __compute_partial<Metric>(X, Y, dist, range_from, range_to);
-            }));
+            threads.push_back(
+                std::thread([&X, &Y, &range_from, &range_to, &dist] {
+                    __compute_partial<Metric>(X, Y, dist, range_from, range_to);
+                }));
         }
         range_from = range_to + 1;
     }
 
-    for (auto &thread: threads) {
+    for (auto &thread : threads) {
         thread.join();
     }
 

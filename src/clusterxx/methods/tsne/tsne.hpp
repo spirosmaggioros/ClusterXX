@@ -1,9 +1,9 @@
 #ifndef CLUSTERXX_METHODS_TSNE_HPP
 #define CLUSTERXX_METHODS_TSNE_HPP
 
+#include <armadillo>
 #include <assert.h>
 #include <utility>
-#include <armadillo>
 
 #include "clusterxx/base/manifold_method.hpp"
 #include "clusterxx/metrics/metrics.hpp"
@@ -26,26 +26,28 @@ class TSNE : manifold_method {
     arma::mat __features;
 
     void __fit(const arma::mat &X);
-    double __compute_sigma(const arma::mat &distances,
-                           double target_perplexity, int iter,
-                           double tolerance = 1e-5, int max_iter = 100);
-    arma::mat __compute_pairwise_affinities(
-        const arma::mat &features, double perplexity);
-    std::pair<arma::mat, arma::mat> __compute_low_dim_affinities(const arma::mat &Y);
-    arma::mat __kullback_leibler_gradient(
-        const arma::mat &pairwise_affinities,
-        const arma::mat &low_dim_affinities,
-        const arma::mat &low_dim_features,
-        const arma::mat &pairwise_dists);
+    double __compute_sigma(const arma::mat &distances, double target_perplexity,
+                           int iter, double tolerance = 1e-5,
+                           int max_iter = 100);
+    arma::mat __compute_pairwise_affinities(const arma::mat &features,
+                                            double perplexity);
+    std::pair<arma::mat, arma::mat>
+    __compute_low_dim_affinities(const arma::mat &Y);
+    arma::mat __kullback_leibler_gradient(const arma::mat &pairwise_affinities,
+                                          const arma::mat &low_dim_affinities,
+                                          const arma::mat &low_dim_features,
+                                          const arma::mat &pairwise_dists);
 
   public:
     TSNE(int n_components = 2, double perplexity = 30.0,
          double learning_rate = 100, double early_exaggeration = 4.0,
          int max_iter = 1000, double min_grad_norm = 1e-7,
          int n_iter_without_progress = 300)
-        : __n_components(n_components), __perplexity(perplexity), __learning_rate(learning_rate),
-          __early_exaggeration(early_exaggeration), __max_iter(max_iter), 
-          __min_grad_norm(min_grad_norm), __n_iter_without_progress(n_iter_without_progress) {
+        : __n_components(n_components), __perplexity(perplexity),
+          __learning_rate(learning_rate),
+          __early_exaggeration(early_exaggeration), __max_iter(max_iter),
+          __min_grad_norm(min_grad_norm),
+          __n_iter_without_progress(n_iter_without_progress) {
         assert(n_components > 1);
         assert(perplexity > 0);
         assert(learning_rate > 0.0);

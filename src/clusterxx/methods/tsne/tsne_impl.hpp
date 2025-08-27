@@ -7,17 +7,18 @@
 #include <random>
 
 template <typename Metric>
-double
-clusterxx::TSNE<Metric>::__compute_sigma(const arma::mat &distances,
-                                         double target_perplexity, int iter,
-                                         double tolerance, int max_iter) {
+double clusterxx::TSNE<Metric>::__compute_sigma(const arma::mat &distances,
+                                                double target_perplexity,
+                                                int iter, double tolerance,
+                                                int max_iter) {
     double sigma_lo = 1e-20, sigma_hi = 1e20;
     double sigma = 1.0;
 
     while (max_iter--) {
         double sum_exp = 0.0, sum_exp_tot = 0.0;
         for (size_t j = 0; j < distances.row(iter).n_rows; j++) {
-            double exp = std::exp(-1.0 * distances(iter, j) / (2.0 * sigma * sigma));
+            double exp =
+                std::exp(-1.0 * distances(iter, j) / (2.0 * sigma * sigma));
             sum_exp += exp;
             sum_exp_tot += distances(iter, j) * exp;
         }
@@ -53,7 +54,8 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
     arma::mat p_ji(features.n_rows, features.n_rows);
     arma::mat pairwise_dists = metric(features, arma::mat());
     for (size_t i = 0; i < features.n_rows; i++) {
-        std::cout << "i am at iteration: " << i << " / " << features.n_rows << '\n';
+        std::cout << "i am at iteration: " << i << " / " << features.n_rows
+                  << '\n';
         double sigma = __compute_sigma(pairwise_dists, perplexity, i);
 
         double sum = 0.0;
@@ -69,7 +71,7 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
             }
         }
         if (sum > 0) {
-            for (auto &p: p_ji.row(i)) {
+            for (auto &p : p_ji.row(i)) {
                 p /= sum;
             }
         }
@@ -79,7 +81,8 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 }
 
 template <typename Metric>
-std::pair<arma::mat, arma::mat> clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
+std::pair<arma::mat, arma::mat>
+clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
     arma::mat pairwise_dists = metric(Y, arma::mat());
     arma::mat q_ij = 1.0 / (1.0 + pairwise_dists);
     q_ij.diag().zeros();
@@ -91,17 +94,17 @@ std::pair<arma::mat, arma::mat> clusterxx::TSNE<Metric>::__compute_low_dim_affin
 
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
-    const arma::mat &pairwise_affinities,
-    const arma::mat &low_dim_affinities,
-    const arma::mat &low_dim_features,
-    const arma::mat &pairwise_dists) {
+    const arma::mat &pairwise_affinities, const arma::mat &low_dim_affinities,
+    const arma::mat &low_dim_features, const arma::mat &pairwise_dists) {
     assert(pairwise_affinities.n_rows == low_dim_affinities.n_rows);
     assert(pairwise_affinities.n_cols == low_dim_affinities.n_cols);
 
-    arma::mat F = 4.0 * (__early_exaggeration * pairwise_affinities - low_dim_affinities);
+    arma::mat F =
+        4.0 * (__early_exaggeration * pairwise_affinities - low_dim_affinities);
     F /= (1.0 + pairwise_dists);
     F.diag().zeros();
-    arma::mat gradient = arma::diagmat(arma::sum(F, 1)) * low_dim_features - F * low_dim_features;
+    arma::mat gradient = arma::diagmat(arma::sum(F, 1)) * low_dim_features -
+                         F * low_dim_features;
     return gradient;
 }
 
@@ -146,11 +149,12 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         }
 
         // compute low dimensional affinities(q_ij)
-        auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(solution);
+        auto [q_ij, sol_pairwise_dists] =
+            __compute_low_dim_affinities(solution);
 
         // compute gradient
-        arma::mat gradients = 
-            __kullback_leibler_gradient(symmetrized, q_ij, solution, sol_pairwise_dists);
+        arma::mat gradients = __kullback_leibler_gradient(
+            symmetrized, q_ij, solution, sol_pairwise_dists);
         double grad_norm = arma::norm(gradients, "fro");
 
         if (grad_norm < __min_grad_norm) {
@@ -158,7 +162,8 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         }
 
         if (i > static_cast<int>(0.25 * __max_iter) && i % 50 == 0) {
-            double kl_loss = arma::accu(symmetrized % arma::log(symmetrized / q_ij));
+            double kl_loss =
+                arma::accu(symmetrized % arma::log(symmetrized / q_ij));
             if (kl_loss > best_loss) {
                 n_iter_no_progress += 50;
             } else {
