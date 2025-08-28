@@ -16,6 +16,8 @@ struct euclidean_distance {
 
         return arma::norm(X - Y, 2);
     }
+
+    double p() { return 2; }
 };
 
 struct squared_euclidean_distance {
@@ -36,6 +38,8 @@ struct chebyshev_distance {
 
         return arma::max(arma::abs(X - Y));
     }
+
+    double p() { return 0; }
 };
 
 struct manhattan_distance {
@@ -46,6 +50,8 @@ struct manhattan_distance {
 
         return arma::sum(arma::abs(X - Y));
     }
+
+    double p() { return 1; }
 };
 } // namespace metrics
 

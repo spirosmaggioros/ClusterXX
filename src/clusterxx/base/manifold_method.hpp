@@ -1,7 +1,6 @@
 #ifndef CLUSTERXX_BASE_MANIFOLD_METHOD_HPP
 #define CLUSTERXX_BASE_MANIFOLD_METHOD_HPP
 
-#include <vector>
 #include <armadillo>
 
 namespace clusterxx {
