@@ -85,9 +85,9 @@ void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
 
     double diff = X(axis) - node->__point(axis);
     double bound;
-    if (metric.p() == 0) {
+    if (metric.p() == 0) { // chebyshev distance
         bound = std::abs(diff);
-    } else {
+    } else { // euclidean or manhattan
         bound = std::pow(std::abs(diff), metric.p());
     }
 
