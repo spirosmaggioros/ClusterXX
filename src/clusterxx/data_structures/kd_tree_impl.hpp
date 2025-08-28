@@ -80,8 +80,7 @@ void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
     std::unique_ptr<kd_node> &_to_check =
         (X(axis) < node->__point(axis)) ? node->right : node->left;
 
-    __radius_nearest_neighbors(_next_node, X, heap, radius,
-                              depth + 1);
+    __radius_nearest_neighbors(_next_node, X, heap, radius, depth + 1);
 
     double diff = X(axis) - node->__point(axis);
     double bound;
@@ -92,13 +91,13 @@ void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
     }
 
     if (bound <= radius) {
-        __radius_nearest_neighbors(_to_check, X, heap, radius,
-                                  depth + 1);
+        __radius_nearest_neighbors(_to_check, X, heap, radius, depth + 1);
     }
 }
 
 template <typename Metric>
-arma::mat clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
+std::pair<std::vector<int>, std::vector<double>>
+clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
     MaxHeap heap;
     __k_nearest_neighbors(__root, X, heap, 0, k);
 
@@ -108,20 +107,21 @@ arma::mat clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
         heap.pop();
     }
 
-    arma::mat results(k, 2);
     std::sort(_res.begin(), _res.end(),
               [](const auto &a, const auto &b) { return a.first < b.first; });
-
-    for (int i = 0; i < k; i++) {
-        results.row(i) = arma::vec({_res[i].first, double(_res[i].second)}).t();
+    std::vector<double> dists;
+    std::vector<int> inds;
+    for (auto &[dist, ind] : _res) {
+        dists.push_back(dist);
+        inds.push_back(ind);
     }
 
-    return results;
+    return std::make_pair(inds, dists);
 }
 
 template <typename Metric>
-arma::mat clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X,
-                                                   const double &r) {
+std::pair<std::vector<int>, std::vector<double>>
+clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X, const double &r) {
     MaxHeap heap;
     __radius_nearest_neighbors(__root, X, heap, r);
 
@@ -133,12 +133,14 @@ arma::mat clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X,
     std::sort(_res.begin(), _res.end(),
               [](const auto &a, const auto &b) { return a.first < b.first; });
 
-    arma::mat results(_res.size(), 2);
-    for (size_t i = 0; i < _res.size(); i++) {
-        results.row(i) = arma::vec({_res[i].first, double(_res[i].second)}).t();
+    std::vector<double> dists;
+    std::vector<int> inds;
+    for (auto &[dist, ind] : _res) {
+        dists.push_back(dist);
+        inds.push_back(ind);
     }
 
-    return results;
+    return std::make_pair(inds, dists);
 }
 
 #endif

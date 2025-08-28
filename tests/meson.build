@@ -7,6 +7,7 @@ clusterxx_dep = declare_dependency(
 tests = {
     'metrics_tests': 'metrics/metrics_tests.cc',
     'kmeans_tests': 'kmeans/kmeans_tests.cc',
+    'dbscan_tests': 'dbscan/dbscan_tests.cc',
     'tsne_tests': 'tsne/tsne_tests.cc',
     'kd_tree_tests': 'kd_tree/kd_tree_tests.cc',
 }

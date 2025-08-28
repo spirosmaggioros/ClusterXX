@@ -105,11 +105,17 @@ void clusterxx::KMeans<Metric>::__fit(const arma::mat &X) {
 
 template <typename Metric>
 void clusterxx::KMeans<Metric>::fit(const arma::mat &X) {
+    __assignments.clear();
+    __centroids.clear();
+    __labels.clear();
     __fit(X);
 }
 
 template <typename Metric>
 std::vector<int> clusterxx::KMeans<Metric>::fit_predict(const arma::mat &X) {
+    __assignments.clear();
+    __centroids.clear();
+    __labels.clear();
     __fit(X);
     return __labels;
 }

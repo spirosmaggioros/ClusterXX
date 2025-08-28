@@ -56,8 +56,8 @@ class kd_tree {
                                const arma::vec &X, MaxHeap &heap,
                                const int depth = 0, const int k = 1);
     void __radius_nearest_neighbors(std::unique_ptr<kd_node> &node,
-                                   const arma::vec &X, MaxHeap &heap,
-                                   const double radius, const int depth = 0);
+                                    const arma::vec &X, MaxHeap &heap,
+                                    const double radius, const int depth = 0);
 
     Metric metric;
     arma::mat __features;
@@ -72,8 +72,10 @@ class kd_tree {
     }
 
     void add(const arma::vec &feature);
-    arma::mat query(const arma::vec &X, const int &k = 1);
-    arma::mat query_radius(const arma::vec &X, const double &r);
+    std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
+                                                           const int &k = 1);
+    std::pair<std::vector<int>, std::vector<double>>
+    query_radius(const arma::vec &X, const double &r);
 };
 } // namespace clusterxx
 

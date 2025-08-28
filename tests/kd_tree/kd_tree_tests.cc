@@ -7,10 +7,10 @@ TEST_CASE("Testing kd-tree query", "[kdtree]") {
     clusterxx::kd_tree kd_tree = clusterxx::kd_tree(X);
 
     arma::vec target = {1.0, 1.0};
-    arma::mat query = kd_tree.query(target, 3);
-    REQUIRE(query(0, 1) == 0);
-    REQUIRE(query(1, 1) == 2);
-    REQUIRE(query(2, 1) == 1);
+    auto [indices, dists] = kd_tree.query(target, 3);
+    REQUIRE(indices[0] == 0);
+    REQUIRE(indices[1] == 2);
+    REQUIRE(indices[2] == 1);
 }
 
 TEST_CASE("Testing kd-tree query radius", "[kdtree]") {
@@ -27,10 +27,10 @@ TEST_CASE("Testing kd-tree query radius", "[kdtree]") {
                    {0.94466892, 0.52184832, 0.41466194}
     };
     clusterxx::kd_tree kd_tree = clusterxx::kd_tree(X);
-    arma::mat points = kd_tree.query_radius(X.row(0).t(), 0.3);
+    auto [indices, dists] = kd_tree.query_radius(X.row(0).t(), 0.3);
 
-    REQUIRE(points.n_rows == 3);
-    REQUIRE(points(0, 1) == 0);
-    REQUIRE(points(1, 1) == 3);
-    REQUIRE(points(2, 1) == 1);
+    REQUIRE(indices.size() == 3);
+    REQUIRE(indices[0] == 0);
+    REQUIRE(indices[1] == 3);
+    REQUIRE(indices[2] == 1);
 }
