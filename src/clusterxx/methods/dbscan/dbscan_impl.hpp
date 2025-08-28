@@ -2,6 +2,7 @@
 #define CLUSTERXX_METHODS_DBSCAN_IMPL_HPP
 
 #include "dbscan.hpp"
+#include <print>
 
 template <typename Metric, class Algorithm>
 void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
@@ -72,6 +73,8 @@ clusterxx::DBSCAN<Metric, Algorithm>::fit_predict(const arma::mat &X) {
 template <typename Metric, class Algorithm>
 std::vector<int>
 clusterxx::DBSCAN<Metric, Algorithm>::predict(const arma::mat &X) {
+    std::println("[WARNING] predict() function is not implemented for this "
+                 "class. Use fit_predict() instead");
     // Not implemented
     return {};
 }
