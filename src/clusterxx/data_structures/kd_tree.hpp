@@ -52,10 +52,10 @@ class kd_tree {
     std::unique_ptr<kd_node> __root;
 
     void __initialize();
-    void __k_nearest_neighbors(std::unique_ptr<kd_node> node,
+    void __k_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                const arma::vec &X, MaxHeap &heap,
                                const int depth = 0, const int k = 1);
-    void __query_nearest_neighbors(std::unique_ptr<kd_node> node,
+    void __radius_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                    const arma::vec &X, MaxHeap &heap,
                                    const double radius, const int depth = 0);
 

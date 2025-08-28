@@ -25,7 +25,7 @@ void clusterxx::kd_tree<Metric>::add(const arma::vec &feature) {
 
 template <typename Metric>
 void clusterxx::kd_tree<Metric>::__k_nearest_neighbors(
-    std::unique_ptr<kd_node> node, const arma::vec &X, MaxHeap &heap,
+    std::unique_ptr<kd_node> &node, const arma::vec &X, MaxHeap &heap,
     const int depth, const int k) {
     if (!node) {
         return;
@@ -46,7 +46,7 @@ void clusterxx::kd_tree<Metric>::__k_nearest_neighbors(
     std::unique_ptr<kd_node> &_to_check =
         (X(axis) < node->__point(axis)) ? node->right : node->left;
 
-    __k_nearest_neighbors(std::move(_next_node), X, heap, depth + 1, k);
+    __k_nearest_neighbors(_next_node, X, heap, depth + 1, k);
 
     double diff = X(axis) - node->__point(axis);
     double bound;
@@ -56,13 +56,13 @@ void clusterxx::kd_tree<Metric>::__k_nearest_neighbors(
         bound = std::pow(std::abs(diff), metric.p());
     }
     if (heap.size() < k || bound < heap.top().first) {
-        __k_nearest_neighbors(std::move(_to_check), X, heap, depth + 1, k);
+        __k_nearest_neighbors(_to_check, X, heap, depth + 1, k);
     }
 }
 
 template <typename Metric>
-void clusterxx::kd_tree<Metric>::__query_nearest_neighbors(
-    std::unique_ptr<kd_node> node, const arma::vec &X, MaxHeap &heap,
+void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
+    std::unique_ptr<kd_node> &node, const arma::vec &X, MaxHeap &heap,
     const double radius, const int depth) {
     if (!node) {
         return;
@@ -80,7 +80,7 @@ void clusterxx::kd_tree<Metric>::__query_nearest_neighbors(
     std::unique_ptr<kd_node> &_to_check =
         (X(axis) < node->__point(axis)) ? node->right : node->left;
 
-    __query_nearest_neighbors(std::move(_next_node), X, heap, radius,
+    __radius_nearest_neighbors(_next_node, X, heap, radius,
                               depth + 1);
 
     double diff = X(axis) - node->__point(axis);
@@ -92,7 +92,7 @@ void clusterxx::kd_tree<Metric>::__query_nearest_neighbors(
     }
 
     if (bound <= radius) {
-        __query_nearest_neighbors(std::move(_to_check), X, heap, radius,
+        __radius_nearest_neighbors(_to_check, X, heap, radius,
                                   depth + 1);
     }
 }
@@ -100,7 +100,7 @@ void clusterxx::kd_tree<Metric>::__query_nearest_neighbors(
 template <typename Metric>
 arma::mat clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
     MaxHeap heap;
-    __k_nearest_neighbors(std::move(__root), X, heap, 0, k);
+    __k_nearest_neighbors(__root, X, heap, 0, k);
 
     std::vector<std::pair<double, int>> _res;
     while (!heap.empty()) {
@@ -123,7 +123,7 @@ template <typename Metric>
 arma::mat clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X,
                                                    const double &r) {
     MaxHeap heap;
-    __query_nearest_neighbors(std::move(__root), X, heap, r);
+    __radius_nearest_neighbors(__root, X, heap, r);
 
     std::vector<std::pair<double, int>> _res;
     while (!heap.empty()) {
