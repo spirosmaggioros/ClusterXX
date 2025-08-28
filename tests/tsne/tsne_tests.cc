@@ -6,6 +6,10 @@
 #include <iostream>
 #include <armadillo>
 
+TEST_CASE("temp test", "[t-SNE]") {
+    REQUIRE(true == true);
+}
+
 // TOO SLOW
 // TEST_CASE("Testing t-SNE with low dimensional data", "[t-SNE]") {
 //     arma::mat X(5000, 3);
