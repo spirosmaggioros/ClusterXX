@@ -10,7 +10,7 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
     __algorithm = std::make_unique<Algorithm>(X);
     int cluster_id = 0;
     for (size_t i = 0; i < X.n_rows; i++) {
-        arma::vec _curr_point = X.row(i).t();
+        const arma::vec &_curr_point = X.row(i).t();
         if (__assignments.find(i) == __assignments.end()) {
             auto [inds, _] = __algorithm->query_radius(_curr_point, __eps);
             if (inds.size() < __min_samples) {
@@ -28,12 +28,11 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
                     continue;
                 }
 
-                arma::vec curr = X.row(inds.back()).t();
+                const arma::vec &curr = X.row(inds.back()).t();
                 auto [res, _] = __algorithm->query_radius(curr, __eps);
 
                 if (res.size() >= __min_samples) {
                     for (size_t r = 0; r < res.size(); r++) {
-                        arma::vec curr_p = X.row(res[r]).t();
                         if (__assignments.find(res[r]) == __assignments.end()) {
                             inds.push_back(res[r]);
                             __assignments[res[r]] = cluster_id;

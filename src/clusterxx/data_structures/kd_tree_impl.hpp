@@ -100,20 +100,14 @@ std::pair<std::vector<int>, std::vector<double>>
 clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
     MaxHeap heap;
     __k_nearest_neighbors(__root, X, heap, 0, k);
-
-    std::vector<std::pair<double, int>> _res;
-    while (!heap.empty()) {
-        _res.push_back(heap.top());
-        heap.pop();
-    }
-
-    std::sort(_res.begin(), _res.end(),
-              [](const auto &a, const auto &b) { return a.first < b.first; });
     std::vector<double> dists;
     std::vector<int> inds;
-    for (auto &[dist, ind] : _res) {
+
+    while (!heap.empty()) {
+        auto [dist, ind] = heap.top();
         dists.push_back(dist);
         inds.push_back(ind);
+        heap.pop();
     }
 
     return std::make_pair(inds, dists);
@@ -124,20 +118,14 @@ std::pair<std::vector<int>, std::vector<double>>
 clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X, const double &r) {
     MaxHeap heap;
     __radius_nearest_neighbors(__root, X, heap, r);
-
-    std::vector<std::pair<double, int>> _res;
-    while (!heap.empty()) {
-        _res.push_back(heap.top());
-        heap.pop();
-    }
-    std::sort(_res.begin(), _res.end(),
-              [](const auto &a, const auto &b) { return a.first < b.first; });
-
     std::vector<double> dists;
     std::vector<int> inds;
-    for (auto &[dist, ind] : _res) {
+
+    while (!heap.empty()) {
+        auto [dist, ind] = heap.top();
         dists.push_back(dist);
         inds.push_back(ind);
+        heap.pop();
     }
 
     return std::make_pair(inds, dists);
