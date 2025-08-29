@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <armadillo>
 #include <clusterxx.hpp>
+#include <random>
 
 TEST_CASE("Testing k-d tree query", "[k-d tree]") {
     arma::mat X = {{1.0, 1.0}, {3.0, 3.0}, {2.0, 2.0}};
@@ -34,6 +35,81 @@ TEST_CASE("Testing kd-tree query radius", "[k-d tree]") {
     REQUIRE(indices[0] == 0);
     REQUIRE(indices[1] == 1);
     REQUIRE(indices[2] == 3);
+
+    X = {{0.5488135 , 0.71518937, 0.60276338},
+       {0.54488318, 0.4236548 , 0.64589411},
+       {0.43758721, 0.891773  , 0.96366276},
+       {0.38344152, 0.79172504, 0.52889492},
+       {0.56804456, 0.92559664, 0.07103606},
+       {0.0871293 , 0.0202184 , 0.83261985},
+       {0.77815675, 0.87001215, 0.97861834},
+       {0.79915856, 0.46147936, 0.78052918},
+       {0.11827443, 0.63992102, 0.14335329},
+       {0.94466892, 0.52184832, 0.41466194}};
+    clusterxx::kd_tree kd_tree_2 = clusterxx::kd_tree(X);
+    auto [indices_2, dists_2] = kd_tree.query(X.row(0).t(), 3);
+    REQUIRE(std::find(indices_2.begin(), indices_2.end(), 0) != indices_2.end());
+    REQUIRE(std::find(indices_2.begin(), indices_2.end(), 3) != indices_2.end());
+    REQUIRE(std::find(indices_2.begin(), indices_2.end(), 1) != indices_2.end());
+
+    X = {{-0.35940664, -0.32495562},
+       { 0.22570402, -0.90781187},
+       {-0.15532638,  0.45400551},
+       {-0.1430217 , -0.45722755},
+       {-0.84701618,  0.51766428},
+       { 0.30799255,  0.4291827 },
+       {-0.23276924,  0.47123999},
+       { 0.45767852, -0.06195232},
+       {-0.29365151,  0.41088073},
+       { 0.12360631, -0.99916064},
+       { 0.70589463, -0.69142641},
+       { 0.52280183, -0.92934732},
+       {-0.45922902, -0.23718001},
+       {-0.57150909,  0.76278888},
+       { 0.42764846,  0.18373219},
+       { 0.40311395,  1.00554409},
+       {-0.54793482, -0.0488495 },
+       { 0.96194081, -0.12877446},
+       { 0.35710324,  0.31316348},
+       {-0.41960458,  0.93761881},
+       { 0.0267754 ,  0.50399888},
+       {-0.28497727, -0.5014644 },
+       {-0.52869814, -0.23252729},
+       {-0.48866094,  0.19135599},
+       { 0.11564771,  0.47839831},
+       { 0.500593  ,  0.86194834},
+       {-0.0243255 , -0.5562242 },
+       {-0.827819  , -0.52367132},
+       {-0.98979851,  0.37018218},
+       { 0.96030735, -0.01190598},
+       {-1.06462025, -0.14012788},
+       {-0.90369978, -0.32070958},
+       { 0.38204515,  0.26124751},
+       { 0.13942693,  0.91346151},
+       {-0.70257079, -0.81725246},
+       { 0.23797784, -0.33589091},
+       { 0.44952632, -0.23102245},
+       {-0.22040334, -0.95074675},
+       {-0.42329014,  0.34403544},
+       { 0.95375508,  0.27748829},
+       {-0.12723566,  1.01099324},
+       { 0.76679532,  0.63851191},
+       {-0.40022948, -0.88548635},
+       { 0.85197242,  0.54982397},
+       { 0.87448253, -0.5658689 },
+       {-1.05595174,  0.13502632},
+       { 0.31690905, -0.38805298},
+       { 0.18808357, -0.42590286},
+       { 0.48995072, -0.06944899},
+       {-0.45859109,  0.04282767}};
+
+    clusterxx::kd_tree kd_tree3 = clusterxx::kd_tree(X);
+    auto [inds_3, dists_3] = kd_tree3.query_radius(X.row(0).t(), 0.3);
+
+    std::vector<int> checks = {12, 22, 21, 3, 0};
+    for (auto &x: checks) {
+        REQUIRE(std::find(inds_3.begin(), inds_3.end(), x) != inds_3.end());
+    }
 }
 
 TEST_CASE("Testing k-d tree depth with big data", "[k-d tree]") {
@@ -43,4 +119,24 @@ TEST_CASE("Testing k-d tree depth with big data", "[k-d tree]") {
     }
     clusterxx::kd_tree kd_tree = clusterxx::kd_tree(X);
     REQUIRE(kd_tree.depth() < 12);
+}
+
+TEST_CASE("Testing k-d tree for duplicate returned indices", "[k-d tree]") {
+    arma::mat X(5000, 2);
+    std::uniform_real_distribution<double> unif(-1.0, 1.0);
+    std::default_random_engine re;
+    for (int i = 0; i < 5000; i++) {
+        std::vector<double> _curr = {unif(re), unif(re)};
+        X.row(i) = arma::vec(_curr).t();
+    }
+
+    clusterxx::kd_tree kd_tree = clusterxx::kd_tree(X);
+    for (int i = 0; i < 5; i++) {
+        std::vector<double> target = {unif(re), unif(re)};
+        arma::vec target_vec = arma::vec(target);
+        auto [inds, _] = kd_tree.query_radius(target_vec, 0.5);
+        REQUIRE(!inds.empty());
+        auto unique_it = std::unique(inds.begin(), inds.end());
+        REQUIRE(unique_it == inds.end());
+    }
 }

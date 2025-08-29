@@ -18,16 +18,20 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
             }
 
             for (auto &ind : inds) {
-                __assignments[ind] = cluster_id;
+                __assignments[i] = cluster_id;
             }
 
             while (!inds.empty()) {
+                auto current = inds.back();
                 if (inds.back() == i) {
                     inds.pop_back();
                     continue;
+                } else {
+                    inds.pop_back();
                 }
+                
 
-                const arma::vec &curr = X.row(inds.back()).t();
+                const arma::vec &curr = X.row(current).t();
                 auto [res, _] = __algorithm->query_radius(curr, __eps);
 
                 if (res.size() >= __min_samples) {
@@ -40,8 +44,6 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
                         }
                     }
                 }
-
-                inds.pop_back();
             }
             cluster_id++;
         }

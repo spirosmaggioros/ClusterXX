@@ -117,8 +117,6 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
                 inds.push_back(node->__extra_points_inds[i]);
             }
         }
-
-        return;
     }
 
     std::unique_ptr<kd_node> &_next_node =
