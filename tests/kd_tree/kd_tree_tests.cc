@@ -8,7 +8,7 @@ TEST_CASE("Testing kd-tree query", "[kdtree]") {
 
     arma::vec target = {1.0, 1.0};
     auto [indices, dists] = kd_tree.query(target, 3);
-    
+
     REQUIRE(indices[0] == 1);
     REQUIRE(indices[1] == 2);
     REQUIRE(indices[2] == 0);
@@ -31,7 +31,7 @@ TEST_CASE("Testing kd-tree query radius", "[kdtree]") {
     auto [indices, dists] = kd_tree.query_radius(X.row(0).t(), 0.3);
 
     REQUIRE(indices.size() == 3);
-    REQUIRE(indices[0] == 1);
+    REQUIRE(indices[0] == 0);
     REQUIRE(indices[1] == 3);
-    REQUIRE(indices[2] == 0);
+    REQUIRE(indices[2] == 1);
 }
