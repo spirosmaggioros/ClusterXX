@@ -7,22 +7,28 @@
 #include <memory>
 #include <queue>
 #include <vector>
+#include <optional>
 
 namespace clusterxx {
-template <typename Metric = clusterxx::metrics::euclidean_distance>
+template <typename Metric = clusterxx::metrics::euclidean_distance,
+          typename PairwiseMetric = clusterxx::pairwise_distances::euclidean_distances>
 class kd_tree {
   private:
     struct kd_node {
         std::unique_ptr<kd_node> left = nullptr;
         std::unique_ptr<kd_node> right = nullptr;
         arma::vec __point;
+        arma::mat __extra_points;
+        std::vector<int> __extra_points_inds;
         size_t __ind;
-        size_t __feature_size;
+        int __feature_size;
 
         kd_node(const arma::vec &point, const size_t ind)
             : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
-        void add(std::unique_ptr<kd_node> kd_node, const int depth = 0) {
+        int add(std::unique_ptr<kd_node> kd_node, const int depth = 0) {
             assert(kd_node->__point.n_cols == __point.n_cols);
+            // if (depth == std::log2(std::max(1, (__feature_size - 1) / __leaf_size) + 1)) { }
+            
             if (kd_node->__point(depth % __feature_size) <
                 __point(depth % __feature_size)) {
                 if (!left) {
@@ -37,6 +43,8 @@ class kd_tree {
                     right->add(std::move(kd_node), depth + 1);
                 }
             }
+
+            return depth;
         }
     };
 
@@ -58,8 +66,9 @@ class kd_tree {
     void __radius_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                     const arma::vec &X, std::vector<double> &dists, std::vector<int> &inds,
                                     const double radius, const int depth = 0);
-
+    int _depth(std::unique_ptr<kd_node> &root);
     Metric metric;
+    PairwiseMetric pairwise_metric;
     int __leaf_size;
 
   public:
@@ -71,13 +80,14 @@ class kd_tree {
         std::vector<size_t> indices(X.n_rows);
         std::iota(indices.begin(), indices.end(), 0);
         __root = __initialize(X, indices);
+        // assert(depth() <= std::log2(std::max(1, (int(X.n_rows) - 1) / __leaf_size)));
     }
 
-    void add(const arma::vec &feature);
     std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
                                                            const int &k = 1);
     std::pair<std::vector<int>, std::vector<double>>
     query_radius(const arma::vec &X, const double &r);
+    int depth();
 };
 } // namespace clusterxx
 

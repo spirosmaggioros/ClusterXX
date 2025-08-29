@@ -3,12 +3,24 @@
 
 #include "kd_tree.hpp"
 
-template <typename Metric>
-std::unique_ptr<typename clusterxx::kd_tree<Metric>::kd_node> clusterxx::kd_tree<Metric>::__initialize(
+template <typename Metric, typename PairwiseMetric>
+std::unique_ptr<typename clusterxx::kd_tree<Metric, PairwiseMetric>::kd_node> clusterxx::kd_tree<Metric, PairwiseMetric>::__initialize(
         const arma::mat &X, std::vector<size_t> &indices, int depth) {
     if (indices.empty()) {
         return nullptr;
     }
+
+    if (indices.size() <= __leaf_size) {
+        auto leaf = std::make_unique<kd_node>(X.row(indices[0]).t(), indices[0]);
+        leaf->__extra_points.resize(indices.size(), X.n_cols);
+        for (size_t i = 1; i < indices.size(); i++) {
+            leaf->__extra_points.row(i) = X.row(indices[i]);
+            leaf->__extra_points_inds.push_back(indices[i]);
+        }
+
+        return leaf;
+    }
+
     int axis = depth % X.n_cols;
 
     std::vector<size_t> _idx_copy = indices;
@@ -30,18 +42,8 @@ std::unique_ptr<typename clusterxx::kd_tree<Metric>::kd_node> clusterxx::kd_tree
     return _nn;
 }
 
-template <typename Metric>
-void clusterxx::kd_tree<Metric>::add(const arma::vec &feature) {
-    std::unique_ptr<kd_node> _nn = std::make_unique<kd_node>(feature.t());
-    if (!__root) {
-        __root = std::move(_nn);
-    } else {
-        __root->add(std::move(_nn));
-    }
-}
-
-template <typename Metric>
-void clusterxx::kd_tree<Metric>::__k_nearest_neighbors(
+template <typename Metric, typename PairwiseMetric>
+void clusterxx::kd_tree<Metric, PairwiseMetric>::__k_nearest_neighbors(
     std::unique_ptr<kd_node> &node, const arma::vec &X, MaxHeap &heap,
     const int depth, const int k) {
     if (!node) {
@@ -66,20 +68,14 @@ void clusterxx::kd_tree<Metric>::__k_nearest_neighbors(
     __k_nearest_neighbors(_next_node, X, heap, depth + 1, k);
 
     double diff = X(axis) - node->__point(axis);
-    double bound = 0.0;
-    if (metric.p() == 0 || metric.p() == 1) {
-        bound = std::abs(diff);
-    } else if (metric.p() == 2) {
-        bound = diff * diff;
-    }
-    if (heap.size() < k || bound < heap.top().first) {
+    if (heap.size() < k || diff * diff <= heap.top().first) {
         __k_nearest_neighbors(_to_check, X, heap, depth + 1, k);
     }
 }
 
-template <typename Metric>
-void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
-    std::unique_ptr<kd_node> &node, const arma::vec &X, 
+template <typename Metric, typename PairwiseMetric>
+void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
+    std::unique_ptr<kd_node> &node, const arma::vec &X,
     std::vector<double> &dists, std::vector<int> &inds,
     const double radius, const int depth) {
     if (!node) {
@@ -88,10 +84,25 @@ void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
     assert(X.n_cols == node->__feature_size);
 
     int axis = depth % X.n_cols;
-    double dist = metric(node->__point, X);
+    double dist = metric(X, node->__point);
+    
     if (dist <= radius) {
         dists.push_back(dist);
         inds.push_back(node->__ind);
+    }
+    if (!node->__extra_points.empty()) {
+        arma::mat _X = X.t();
+        arma::mat pairwise_dists = pairwise_metric(_X, node->__extra_points);
+        assert(pairwise_dists.n_cols == node->__extra_points_inds.size());
+        for (size_t i = 0; i < pairwise_dists.n_cols; i++) {
+            double _dist = pairwise_dists(0, i);
+            if (_dist <= radius) {
+                dists.push_back(_dist);
+                inds.push_back(node->__extra_points_inds[i]);
+            }
+        }
+
+        return;
     }
 
     std::unique_ptr<kd_node> &_next_node =
@@ -102,21 +113,22 @@ void clusterxx::kd_tree<Metric>::__radius_nearest_neighbors(
     __radius_nearest_neighbors(_next_node, X, dists, inds, radius, depth + 1);
 
     double diff = X(axis) - node->__point(axis);
-    double bound = 0.0;
-    if (metric.p() == 0 || metric.p() == 1) {
-        bound = std::abs(diff);
-    } else if (metric.p() == 2) {
-        bound = diff * diff;
-    }
-
-    if (bound <= radius) {
+    if (diff * diff <= radius) {
         __radius_nearest_neighbors(_to_check, X, dists, inds, radius, depth + 1);
     }
 }
 
-template <typename Metric>
+template <typename Metric, typename PairwiseMetric>
+int clusterxx::kd_tree<Metric, PairwiseMetric>::_depth(std::unique_ptr<kd_node> &root) {
+    if (!root) {
+        return 0;
+    }
+    return 1 + std::max(_depth(root->left), _depth(root->right));
+}
+
+template <typename Metric, typename PairwiseMetric>
 std::pair<std::vector<int>, std::vector<double>>
-clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
+clusterxx::kd_tree<Metric, PairwiseMetric>::query(const arma::vec &X, const int &k) {
     MaxHeap heap;
     __k_nearest_neighbors(__root, X, heap, 0, k);
     std::vector<double> dists;
@@ -132,14 +144,19 @@ clusterxx::kd_tree<Metric>::query(const arma::vec &X, const int &k) {
     return std::make_pair(inds, dists);
 }
 
-template <typename Metric>
+template <typename Metric, typename PairwiseMetric>
 std::pair<std::vector<int>, std::vector<double>>
-clusterxx::kd_tree<Metric>::query_radius(const arma::vec &X, const double &r) {
+clusterxx::kd_tree<Metric, PairwiseMetric>::query_radius(const arma::vec &X, const double &r) {
     std::vector<double> dists;
     std::vector<int> inds;
     __radius_nearest_neighbors(__root, X, dists, inds, r);
 
     return std::make_pair(inds, dists);
+}
+
+template <typename Metric, typename PairwiseMetric>
+int clusterxx::kd_tree<Metric, PairwiseMetric>::depth() {
+    return _depth(__root);
 }
 
 #endif
