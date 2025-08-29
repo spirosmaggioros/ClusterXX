@@ -29,13 +29,11 @@ TEST_CASE("Testing kd-tree query radius", "[k-d tree]") {
     };
     clusterxx::kd_tree kd_tree = clusterxx::kd_tree(X);
     auto [indices, dists] = kd_tree.query_radius(X.row(0).t(), 0.3);
-    for (auto &x: indices) { std::cout << x << " "; }
-    std::cout << '\n';
 
     REQUIRE(indices.size() == 3);
     REQUIRE(indices[0] == 0);
-    REQUIRE(indices[1] == 3);
-    REQUIRE(indices[2] == 1);
+    REQUIRE(indices[1] == 1);
+    REQUIRE(indices[2] == 3);
 }
 
 TEST_CASE("Testing k-d tree depth with big data", "[k-d tree]") {

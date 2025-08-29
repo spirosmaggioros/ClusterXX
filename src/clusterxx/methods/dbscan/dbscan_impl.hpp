@@ -72,7 +72,8 @@ template <typename Metric, class Algorithm>
 std::vector<int>
 clusterxx::DBSCAN<Metric, Algorithm>::predict(const arma::mat &X) {
     std::cout << "[WARNING] predict() function is not implemented for this "
-                 "class. Use fit_predict() instead" << '\n';
+                 "class. Use fit_predict() instead"
+              << '\n';
     // Not implemented
     return {};
 }

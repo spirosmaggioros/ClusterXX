@@ -5,13 +5,14 @@
 #include <armadillo>
 #include <assert.h>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <vector>
-#include <optional>
 
 namespace clusterxx {
 template <typename Metric = clusterxx::metrics::euclidean_distance,
-          typename PairwiseMetric = clusterxx::pairwise_distances::euclidean_distances>
+          typename PairwiseMetric =
+              clusterxx::pairwise_distances::euclidean_distances>
 class kd_tree {
   private:
     struct kd_node {
@@ -27,8 +28,9 @@ class kd_tree {
             : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
         int add(std::unique_ptr<kd_node> kd_node, const int depth = 0) {
             assert(kd_node->__point.n_cols == __point.n_cols);
-            // if (depth == std::log2(std::max(1, (__feature_size - 1) / __leaf_size) + 1)) { }
-            
+            // if (depth == std::log2(std::max(1, (__feature_size - 1) /
+            // __leaf_size) + 1)) { }
+
             if (kd_node->__point(depth % __feature_size) <
                 __point(depth % __feature_size)) {
                 if (!left) {
@@ -59,13 +61,17 @@ class kd_tree {
                             std::vector<std::pair<double, int>>, Compare>;
     std::unique_ptr<kd_node> __root;
 
-    std::unique_ptr<kd_node> __initialize(const arma::mat &X, std::vector<size_t> &indices, int depth = 0);
+    std::unique_ptr<kd_node> __initialize(const arma::mat &X,
+                                          std::vector<size_t> &indices,
+                                          int depth = 0);
     void __k_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                const arma::vec &X, MaxHeap &heap,
                                const int depth = 0, const int k = 1);
     void __radius_nearest_neighbors(std::unique_ptr<kd_node> &node,
-                                    const arma::vec &X, std::vector<double> &dists, std::vector<int> &inds,
-                                    const double radius, const int depth = 0);
+                                    const arma::vec &X,
+                                    std::vector<double> &dists,
+                                    std::vector<int> &inds, const double radius,
+                                    const int depth = 0);
     int _depth(std::unique_ptr<kd_node> &root);
     Metric metric;
     PairwiseMetric pairwise_metric;
@@ -80,7 +86,8 @@ class kd_tree {
         std::vector<size_t> indices(X.n_rows);
         std::iota(indices.begin(), indices.end(), 0);
         __root = __initialize(X, indices);
-        // assert(depth() <= std::log2(std::max(1, (int(X.n_rows) - 1) / __leaf_size)));
+        // assert(depth() <= std::log2(std::max(1, (int(X.n_rows) - 1) /
+        // __leaf_size)));
     }
 
     std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
