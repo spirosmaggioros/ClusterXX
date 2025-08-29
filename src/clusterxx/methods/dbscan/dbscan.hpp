@@ -31,7 +31,7 @@ class DBSCAN : cluster_method {
     void fit(const arma::mat &X) override;
     std::vector<int> fit_predict(const arma::mat &X) override;
     std::vector<int> predict(const arma::mat &X) override;
-    std::vector<int> get_labels();
+    std::vector<int> get_labels() const;
 };
 } // namespace clusterxx
 

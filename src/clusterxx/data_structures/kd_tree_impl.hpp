@@ -52,8 +52,8 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__k_nearest_neighbors(
     }
     assert(X.n_cols == node->__feature_size);
 
-    int axis = depth % X.n_cols;
-    double dist = metric(node->__point, X);
+    int axis = depth % X.n_rows;
+    double dist = metric(X, node->__point);
 
     auto emplace_heap = [&heap, &k, &dist](const double &_dist,
                                            const int &_ind) -> void {
@@ -99,7 +99,7 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
     }
     assert(X.n_cols == node->__feature_size);
 
-    int axis = depth % X.n_cols;
+    int axis = depth % X.n_rows;
     double dist = metric(X, node->__point);
 
     if (dist <= radius) {
