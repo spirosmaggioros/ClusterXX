@@ -27,7 +27,7 @@ class KMeans : cluster_method {
     std::optional<int> __random_state;
 
     void __fit(const arma::mat &X);
-    void __init_centroids(arma::mat features);
+    void __init_centroids();
     void __assign_labels(const arma::mat &X);
     arma::mat __recalc_centroids();
 

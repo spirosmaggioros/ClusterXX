@@ -6,23 +6,22 @@
 #include <assert.h>
 #include <ranges>
 
-template <typename Metric>
-void clusterxx::KMeans<Metric>::__init_centroids(arma::mat features) {
+template <typename Metric> void clusterxx::KMeans<Metric>::__init_centroids() {
     if (__init == "random") {
-        __centroids.resize(__n_clusters, features.n_cols);
+        __centroids.resize(__n_clusters, __features.n_cols);
         int seed = __random_state.value_or(-1);
         arma::mat shuffled;
         if (seed == -1) {
-            shuffled = arma::shuffle(features);
+            shuffled = arma::shuffle(__features);
         } else {
             arma::arma_rng::set_seed(seed);
-            shuffled = arma::shuffle(features);
+            shuffled = arma::shuffle(__features);
         }
         for (int i = 0; i < __n_clusters; i++) {
             __centroids.row(i) = shuffled.row(i);
         }
     } else { // k-means++
-        __centroids.resize(1, features.n_cols);
+        __centroids.resize(1, __features.n_cols);
         int _rand = rand() % (__features.n_rows - 1);
         int _curr_centroid_idx = 0;
         __centroids.row(_curr_centroid_idx++) = __features.row(_rand);
@@ -88,7 +87,7 @@ void clusterxx::KMeans<Metric>::__fit(const arma::mat &X) {
 
     __features = X;
     __labels.resize(__features.n_rows);
-    __init_centroids(X);
+    __init_centroids();
 
     for (int i = 0; i < __max_iter; i++) {
         __assignments.clear();
