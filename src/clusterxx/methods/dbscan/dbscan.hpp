@@ -2,7 +2,7 @@
 #define CLUSTERXX_METHODS_DBSCAN_HPP
 
 #include "clusterxx/base/cluster_method.hpp"
-#include "clusterxx/data_structures/kd_tree.hpp"
+#include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
 #include "clusterxx/metrics/metrics.hpp"
 #include <armadillo>
 #include <memory>
