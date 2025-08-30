@@ -39,6 +39,7 @@ class KMeans : cluster_method {
           __random_state(random_state) {
         assert(max_iter > 0);
         assert(n_clusters > 0);
+        assert(init == "k-means++" || init == "random");
     }
 
     ~KMeans() {}

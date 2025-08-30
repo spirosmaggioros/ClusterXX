@@ -34,7 +34,11 @@ class MiniBatchKMeans : cluster_method {
                     const int max_iter = 100, const int batch_size = 1024,
                     std::optional<int> random_state = std::nullopt)
         : __n_clusters(n_clusters), __init(init), __max_iter(max_iter),
-          __batch_size(batch_size), __random_state(random_state) {}
+          __batch_size(batch_size), __random_state(random_state) {
+        assert(max_iter > 0);
+        assert(n_clusters > 0);
+        assert(init == "k-means++" || init == "random");
+    }
 
     ~MiniBatchKMeans() {}
 
