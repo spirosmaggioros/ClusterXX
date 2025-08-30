@@ -38,8 +38,6 @@ struct chebyshev_distance {
 
         return arma::max(arma::abs(X - Y));
     }
-
-    double p() { return 0; }
 };
 
 struct manhattan_distance {

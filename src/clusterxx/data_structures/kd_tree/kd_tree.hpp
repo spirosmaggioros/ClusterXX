@@ -79,7 +79,7 @@ class kd_tree {
         : __leaf_size(leaf_size) {
         assert(!X.empty());
         assert(leaf_size > 0);
-        assert(metric.p() >= 0 && metric.p() <= 2);
+        assert(metric.p() > 0 && metric.p() <= 2);
         std::vector<size_t> indices(X.n_rows);
         std::iota(indices.begin(), indices.end(), 0);
         __root = __initialize(X, indices);
