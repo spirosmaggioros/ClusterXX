@@ -17,7 +17,7 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
                 continue;
             }
 
-            for (auto &ind : inds) {
+            for (const auto &ind : inds) {
                 __assignments[ind] = cluster_id;
             }
 
@@ -31,7 +31,7 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
                 auto [res, _] = __algorithm->query_radius(curr, __eps);
 
                 if (res.size() >= __min_samples) {
-                    for (auto &n : res) {
+                    for (const auto &n : res) {
                         if (__assignments.find(n) == __assignments.end()) {
                             inds.push_back(n);
                             __assignments[n] = cluster_id;

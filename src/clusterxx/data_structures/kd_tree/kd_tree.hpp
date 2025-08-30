@@ -5,7 +5,6 @@
 #include <armadillo>
 #include <assert.h>
 #include <memory>
-#include <optional>
 #include <queue>
 #include <vector>
 
@@ -28,8 +27,6 @@ class kd_tree {
             : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
         int add(std::unique_ptr<kd_node> kd_node, const int depth = 0) {
             assert(kd_node->__point.n_cols == __point.n_cols);
-            // if (depth == std::log2(std::max(1, (__feature_size - 1) /
-            // __leaf_size) + 1)) { }
 
             if (kd_node->__point(depth % __feature_size) <
                 __point(depth % __feature_size)) {
