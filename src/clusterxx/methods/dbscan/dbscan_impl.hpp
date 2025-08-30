@@ -6,7 +6,7 @@
 template <typename Metric, class Algorithm>
 void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
     assert(!X.empty());
-    __algorithm = std::make_unique<Algorithm>(X);
+    __algorithm = std::make_unique<Algorithm>(X, __leaf_size);
     int cluster_id = 0;
     for (size_t i = 0; i < X.n_rows; i++) {
         if (__assignments.find(i) == __assignments.end()) {
