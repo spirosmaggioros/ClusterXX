@@ -69,7 +69,7 @@ class kd_tree {
                                     std::vector<double> &dists,
                                     std::vector<int> &inds, const double radius,
                                     const int depth = 0);
-    int _depth(std::unique_ptr<kd_node> &root);
+    int __depth(std::unique_ptr<kd_node> &root);
     Metric metric;
     PairwiseMetric pairwise_metric;
     int __leaf_size;
