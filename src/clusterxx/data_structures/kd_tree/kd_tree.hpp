@@ -25,26 +25,6 @@ class kd_tree {
 
         kd_node(const arma::vec &point, const size_t ind)
             : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
-        int add(std::unique_ptr<kd_node> kd_node, const int depth = 0) {
-            assert(kd_node->__point.n_cols == __point.n_cols);
-
-            if (kd_node->__point(depth % __feature_size) <
-                __point(depth % __feature_size)) {
-                if (!left) {
-                    left = std::move(kd_node);
-                } else {
-                    left->add(std::move(kd_node), depth + 1);
-                }
-            } else {
-                if (!right) {
-                    right = std::move(kd_node);
-                } else {
-                    right->add(std::move(kd_node), depth + 1);
-                }
-            }
-
-            return depth;
-        }
     };
 
     struct Compare {
