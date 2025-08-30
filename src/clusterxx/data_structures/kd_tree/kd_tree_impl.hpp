@@ -83,8 +83,8 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__k_nearest_neighbors(
 
     __k_nearest_neighbors(_next_node, X, heap, depth + 1, k);
 
-    double diff = X(axis) - node->__point(axis);
-    if (heap.size() < k || diff * diff <= heap.top().first) {
+    double diff = std::abs(X(axis) - node->__point(axis));
+    if (heap.size() < k || diff <= heap.top().first) {
         __k_nearest_neighbors(_to_check, X, heap, depth + 1, k);
     }
 }
@@ -126,8 +126,8 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
 
     __radius_nearest_neighbors(_next_node, X, dists, inds, radius, depth + 1);
 
-    double diff = X(axis) - node->__point(axis);
-    if (diff * diff <= radius) {
+    double diff = std::abs(X(axis) - node->__point(axis));
+    if (diff <= radius) {
         __radius_nearest_neighbors(_to_check, X, dists, inds, radius,
                                    depth + 1);
     }
