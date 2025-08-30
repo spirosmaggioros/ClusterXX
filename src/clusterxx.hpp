@@ -9,6 +9,7 @@
 
 // cluster
 #include "clusterxx/methods/kmeans/kmeans.hpp"
+#include "clusterxx/methods/mbkmeans/mbkmeans.hpp"
 #include "clusterxx/methods/dbscan/dbscan.hpp"
 
 // manifold
