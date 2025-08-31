@@ -11,12 +11,12 @@ double clusterxx::TSNE<Metric>::__compute_sigma(const arma::mat &distances,
                                                 double target_perplexity,
                                                 int iter, double tolerance,
                                                 int max_iter) {
-    double sigma_lo = 1e-20, sigma_hi = 1e20;
+    double sigma_lo = 1e-5, sigma_hi = 1e5;
     double sigma = 1.0;
 
     while (max_iter--) {
         double sum_exp = 0.0, sum_exp_tot = 0.0;
-        for (size_t j = 0; j < distances.row(iter).n_rows; j++) {
+        for (size_t j = 0; j < distances.n_cols; j++) {
             double exp =
                 std::exp(-1.0 * distances(iter, j) / (2.0 * sigma * sigma));
             sum_exp += exp;
@@ -54,8 +54,6 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
     arma::mat p_ji(features.n_rows, features.n_rows);
     arma::mat pairwise_dists = metric(features, arma::mat());
     for (size_t i = 0; i < features.n_rows; i++) {
-        std::cout << "i am at iteration: " << i << " / " << features.n_rows
-                  << '\n';
         double sigma = __compute_sigma(pairwise_dists, perplexity, i);
 
         double sum = 0.0;

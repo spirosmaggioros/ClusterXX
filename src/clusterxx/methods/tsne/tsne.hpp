@@ -28,7 +28,7 @@ class TSNE : manifold_method {
     void __fit(const arma::mat &X);
     double __compute_sigma(const arma::mat &distances, double target_perplexity,
                            int iter, double tolerance = 1e-5,
-                           int max_iter = 100);
+                           int max_iter = 300);
     arma::mat __compute_pairwise_affinities(const arma::mat &features,
                                             double perplexity);
     std::pair<arma::mat, arma::mat>
