@@ -1,3 +1,6 @@
+#ifndef CLUSTERXX_METHODS_PCA_IMPL_HPP
+#define CLUSTERXX_METHODS_PCA_IMPL_HPP
+
 #include "pca.hpp"
 
 void clusterxx::PCA::__fit(const arma::mat &X) {
@@ -35,3 +38,5 @@ arma::vec clusterxx::PCA::get_explained_variance() {
     assert(!__explained_variance.empty());
     return __explained_variance;
 }
+
+#endif
