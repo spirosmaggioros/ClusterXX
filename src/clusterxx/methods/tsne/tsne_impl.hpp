@@ -3,49 +3,53 @@
 #define ARMA_USE_BLAS
 
 #include "tsne.hpp"
-#include <limits>
+#include <float.h>
 #include <random>
 
 template <typename Metric>
-double clusterxx::TSNE<Metric>::__compute_sigma(const arma::mat &distances,
-                                                double target_perplexity,
-                                                int iter, double tolerance,
-                                                int max_iter) {
-    double sigma_lo = 1e-5, sigma_hi = 1e5;
-    double sigma = 1.0;
-
+double clusterxx::TSNE<Metric>::__compute_beta(const arma::mat &distances,
+                                               double target_perplexity,
+                                               int iter, double tolerance,
+                                               int max_iter) {
+    double beta = 1.0, min_beta = -DBL_MAX, max_beta = DBL_MAX;
+    std::vector<double> curr_P(distances.n_cols);
     while (max_iter--) {
-        double sum_exp = 0.0, sum_exp_tot = 0.0;
         for (size_t j = 0; j < distances.n_cols; j++) {
-            double exp =
-                std::exp(-1.0 * distances(iter, j) / (2.0 * sigma * sigma));
-            sum_exp += exp;
-            sum_exp_tot += distances(iter, j) * exp;
+            if (static_cast<int>(j) == iter) [[unlikely]] {
+                curr_P[j] = 0.0;
+            } else {
+                curr_P[j] = std::exp(-beta * distances(iter, j));
+            }
         }
-
-        if (sum_exp == 0) {
-            sigma_lo = sigma;
-            sigma = (sigma + sigma_hi) / 2.0;
-            continue;
+        double sum_P = std::accumulate(curr_P.begin(), curr_P.end(), 0.0);
+        double H = 0.0;
+        for (size_t j = 0; j < distances.n_cols; j++) {
+            H += beta * (distances(iter, j) * curr_P[j]);
         }
-
-        double entropy =
-            std::log(sum_exp) + sum_exp_tot / (sum_exp * 2 * sigma * sigma);
-        double perpl = std::pow(2, entropy);
-
-        if (abs(perpl - target_perplexity) < tolerance) {
+        H = (H / sum_P) + std::log(sum_P);
+        double diff = H - std::log(target_perplexity);
+        if (std::abs(diff) < tolerance) {
             break;
         }
 
-        if (perpl > target_perplexity) {
-            sigma_hi = sigma;
+        if (diff > 0) {
+            min_beta = beta;
+            if (max_beta == DBL_MAX || max_beta == -DBL_MAX) {
+                beta *= 2.0;
+            } else {
+                beta = (beta + max_beta) / 2.0;
+            }
         } else {
-            sigma_lo = sigma;
+            max_beta = beta;
+            if (min_beta == -DBL_MAX || min_beta == DBL_MAX) {
+                beta /= 2.0;
+            } else {
+                beta = (beta + min_beta) / 2.0;
+            }
         }
-        sigma = (sigma_lo + sigma_hi) / 2.0;
     }
 
-    return sigma;
+    return beta;
 }
 
 template <typename Metric>
@@ -54,24 +58,19 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
     arma::mat p_ji(features.n_rows, features.n_rows);
     arma::mat pairwise_dists = metric(features, arma::mat());
     for (size_t i = 0; i < features.n_rows; i++) {
-        double sigma = __compute_sigma(pairwise_dists, perplexity, i);
+        double beta = __compute_beta(pairwise_dists, perplexity, i);
 
         double sum = 0.0;
-        size_t dist_idx = 0;
         for (size_t j = 0; j < features.n_rows; j++) {
             if (i == j) [[unlikely]] {
                 p_ji(i, j) = 0.0;
             } else {
-                p_ji(i, j) = std::exp(-1.0 * pairwise_dists(i, dist_idx) /
-                                      (2.0 * sigma * sigma));
+                p_ji(i, j) = std::exp(-beta * pairwise_dists(i, j));
                 sum += p_ji(i, j);
-                dist_idx++;
             }
         }
         if (sum > 0) {
-            for (auto &p : p_ji.row(i)) {
-                p /= sum;
-            }
+            p_ji.row(i) /= sum;
         }
     }
 
@@ -84,8 +83,8 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
     arma::mat pairwise_dists = metric(Y, arma::mat());
     arma::mat q_ij = 1.0 / (1.0 + pairwise_dists);
     q_ij.diag().zeros();
-    arma::mat row_sums = arma::sum(q_ij, 1);
-    q_ij.each_col() /= row_sums;
+    double total_sum = arma::accu(q_ij);
+    q_ij /= total_sum;
 
     return std::make_pair(q_ij, pairwise_dists);
 }
@@ -121,35 +120,30 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     std::mt19937 gen(rd());
     std::normal_distribution<double> dist(0.0, 1e-4);
 
-    arma::mat solution(X.n_rows, __n_components);
-    for (size_t i = 0; i < solution.n_rows; i++) {
+    arma::mat Y(X.n_rows, __n_components);
+    for (size_t i = 0; i < Y.n_rows; i++) {
         for (size_t j = 0; j < __n_components; j++) {
-            solution(i, j) = dist(gen);
+            Y(i, j) = dist(gen);
         }
     }
 
-    arma::mat y_prev, y_2prev;
+    arma::mat Y_inc = arma::zeros<arma::mat>(Y.n_rows, Y.n_cols);
     double best_loss = std::numeric_limits<double>::infinity();
     int n_iter_no_progress = 0;
     for (int i = 0; i < __max_iter; i++) {
-        std::cout << " im at iter: " << i << '\n';
-        if (i == static_cast<int>(__max_iter / 20)) {
-            // end early exaggeration after __max_iter / 20(default, 20
-            // iterations)
-            __early_exaggeration = 1.0;
-        }
         if (i == static_cast<int>(0.25 * __max_iter)) [[unlikely]] {
-            // increase momentum after 1/4 of the iterations
+            // increase momentum and set early exaggeration to 1
+            // after 1/4 of the iterations
             __momentum = 0.8;
+            __early_exaggeration = 1.0;
         }
 
         // compute low dimensional affinities(q_ij)
-        auto [q_ij, sol_pairwise_dists] =
-            __compute_low_dim_affinities(solution);
+        auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
 
         // compute gradient
-        arma::mat gradients = __kullback_leibler_gradient(
-            symmetrized, q_ij, solution, sol_pairwise_dists);
+        arma::mat gradients = __kullback_leibler_gradient(symmetrized, q_ij, Y,
+                                                          sol_pairwise_dists);
         double grad_norm = arma::norm(gradients, "fro");
 
         if (grad_norm < __min_grad_norm) {
@@ -158,7 +152,8 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 
         if (i > static_cast<int>(0.25 * __max_iter) && i % 50 == 0) {
             double kl_loss =
-                arma::accu(symmetrized % arma::log(symmetrized / q_ij));
+                arma::accu((symmetrized + 1e-12) %
+                           arma::log((symmetrized + 1e-12) / (q_ij + 1e-12)));
             if (kl_loss > best_loss) {
                 n_iter_no_progress += 50;
             } else {
@@ -172,27 +167,12 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         }
 
         // update solution
-        for (size_t j = 0; j < solution.n_rows; j++) {
-            for (size_t k = 0; k < __n_components; k++) {
-
-                double momentum_factor = 0.0, previous_factor = 0.0;
-                if (i > 0) [[likely]] {
-                    previous_factor = y_prev(j, k);
-                }
-                if (i > 1) [[likely]] {
-                    momentum_factor = y_prev(j, k) - y_2prev(j, k);
-                }
-                solution(j, k) = previous_factor +
-                                 __learning_rate * gradients(j, k) +
-                                 __momentum * momentum_factor;
-            }
-        }
-        y_2prev = y_prev;
-        y_prev = solution;
+        Y_inc = (__momentum * Y_inc) - (__learning_rate * gradients);
+        Y += Y_inc;
     }
 
-    __features = solution;
-    __shape.first = solution.n_rows;
+    __features = Y;
+    __shape.first = Y.n_rows;
     __shape.second = __n_components;
 }
 

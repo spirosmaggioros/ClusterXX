@@ -55,7 +55,7 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__k_nearest_neighbors(
     int axis = depth % X.n_rows;
     double dist = metric(X, node->__point);
 
-    auto emplace_heap = [&heap, &k, &dist](const double &_dist,
+    auto emplace_heap = [&heap, &k](const double &_dist,
                                            const int &_ind) -> void {
         if (heap.size() < k) {
             heap.emplace(_dist, _ind);

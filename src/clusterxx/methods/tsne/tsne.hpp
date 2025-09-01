@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "clusterxx/base/manifold_method.hpp"
+#include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
 #include "clusterxx/metrics/metrics.hpp"
 
 namespace clusterxx {
@@ -26,9 +27,9 @@ class TSNE : manifold_method {
     arma::mat __features;
 
     void __fit(const arma::mat &X);
-    double __compute_sigma(const arma::mat &distances, double target_perplexity,
-                           int iter, double tolerance = 1e-5,
-                           int max_iter = 300);
+    double __compute_beta(const arma::mat &distances, double target_perplexity,
+                          int iter, double tolerance = 1e-5,
+                          int max_iter = 200);
     arma::mat __compute_pairwise_affinities(const arma::mat &features,
                                             double perplexity);
     std::pair<arma::mat, arma::mat>
@@ -40,7 +41,7 @@ class TSNE : manifold_method {
 
   public:
     TSNE(int n_components = 2, double perplexity = 30.0,
-         double learning_rate = 100, double early_exaggeration = 4.0,
+         double learning_rate = 200, double early_exaggeration = 12.0,
          int max_iter = 1000, double min_grad_norm = 1e-7,
          int n_iter_without_progress = 300)
         : __n_components(n_components), __perplexity(perplexity),
