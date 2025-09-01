@@ -194,8 +194,8 @@ struct silhouette_samples {
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
 struct silhouette_score {
     double operator()(const arma::mat &X, const std::vector<int> &labels) {
-        std::vector<double> SC =
-            clusterxx::clustering::silhouette_samples<Metric>(X, labels);
+        clusterxx::clustering::silhouette_samples<Metric> silhouette_samples;
+        std::vector<double> SC = silhouette_samples(X, labels);
         return std::accumulate(SC.begin(), SC.end(), 0.0) / X.n_rows;
     }
 };
