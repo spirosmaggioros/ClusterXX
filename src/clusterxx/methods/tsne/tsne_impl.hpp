@@ -145,7 +145,6 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         arma::mat gradients = __kullback_leibler_gradient(symmetrized, q_ij, Y,
                                                           sol_pairwise_dists);
         double grad_norm = arma::norm(gradients, "fro");
-
         if (grad_norm < __min_grad_norm) {
             break;
         }

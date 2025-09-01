@@ -6,11 +6,10 @@
 #include <utility>
 
 #include "clusterxx/base/manifold_method.hpp"
-#include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
 #include "clusterxx/metrics/metrics.hpp"
 
 namespace clusterxx {
-template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
+template <typename Metric = clusterxx::pairwise_distances::squared_euclidean_distances>
 class TSNE : manifold_method {
   private:
     int __n_components;
