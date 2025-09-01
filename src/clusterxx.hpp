@@ -15,5 +15,8 @@
 // manifold
 #include "clusterxx/methods/tsne/tsne.hpp"
 
+// decomposition
+#include "clusterxx/methods/pca/pca.hpp"
+
 
 #endif

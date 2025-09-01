@@ -10,6 +10,7 @@ tests = {
     'dbscan_tests': 'dbscan/dbscan_tests.cc',
     'tsne_tests': 'tsne/tsne_tests.cc',
     'kd_tree_tests': 'kd_tree/kd_tree_tests.cc',
+    'pca_tests': 'pca/pca_tests.cc',
 }
 
 foreach test_name, test_source : tests

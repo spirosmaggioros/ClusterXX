@@ -11,6 +11,6 @@ class nearest_neighbor {
     nearest_neighbor &operator=(const nearest_neighbor &) = default;
     nearest_neighbor &operator=(nearest_neighbor &&) = default;
 };
-}
+} // namespace clusterxx
 
 #endif
