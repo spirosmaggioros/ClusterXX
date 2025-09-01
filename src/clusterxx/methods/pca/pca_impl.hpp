@@ -34,7 +34,7 @@ arma::mat clusterxx::PCA::fit_transform(const arma::mat &X) {
     return __signals;
 }
 
-arma::vec clusterxx::PCA::get_explained_variance() {
+arma::vec clusterxx::PCA::get_explained_variance() const {
     assert(!__explained_variance.empty());
     return __explained_variance;
 }

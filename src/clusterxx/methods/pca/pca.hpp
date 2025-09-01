@@ -19,7 +19,7 @@ class PCA : decomposition_method {
     }
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;
-    arma::vec get_explained_variance();
+    arma::vec get_explained_variance() const;
 };
 } // namespace clusterxx
 
