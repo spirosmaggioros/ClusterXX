@@ -7,16 +7,14 @@
 namespace clusterxx {
 class PCA : decomposition_method {
   private:
-    int __n_components;
+    unsigned int __n_components;
     arma::mat __signals;
     arma::vec __explained_variance;
 
     void __fit(const arma::mat &X);
 
   public:
-    PCA(int n_components) : __n_components(n_components) {
-        assert(n_components > 0);
-    }
+    PCA(const unsigned int n_components) : __n_components(n_components) {}
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;
     arma::vec get_explained_variance() const;

@@ -12,14 +12,14 @@ namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::squared_euclidean_distances>
 class TSNE : manifold_method {
   private:
-    int __n_components;
+    unsigned int __n_components;
     double __perplexity;
     double __learning_rate;
     double __early_exaggeration;
-    int __max_iter;
+    unsigned int __max_iter;
     double __momentum = 0.5;
     double __min_grad_norm;
-    int __n_iter_without_progress;
+    unsigned int __n_iter_without_progress;
     Metric metric;
 
     std::pair<int, int> __shape;
@@ -39,16 +39,19 @@ class TSNE : manifold_method {
                                           const arma::mat &pairwise_dists);
 
   public:
-    TSNE(int n_components = 2, double perplexity = 30.0,
-         double learning_rate = 200, double early_exaggeration = 12.0,
-         int max_iter = 1000, double min_grad_norm = 1e-7,
-         int n_iter_without_progress = 300)
+    TSNE(const unsigned int n_components = 2,
+         const double perplexity = 30.0,
+         const double learning_rate = 200,
+         const double early_exaggeration = 12.0,
+         const unsigned int max_iter = 1000,
+         const double min_grad_norm = 1e-7,
+         const unsigned int n_iter_without_progress = 300)
         : __n_components(n_components), __perplexity(perplexity),
           __learning_rate(learning_rate),
           __early_exaggeration(early_exaggeration), __max_iter(max_iter),
           __min_grad_norm(min_grad_norm),
           __n_iter_without_progress(n_iter_without_progress) {
-        assert(n_components > 1);
+        assert(n_components > 0);
         assert(perplexity > 0);
         assert(learning_rate > 0.0);
         assert(early_exaggeration >= 1.0);

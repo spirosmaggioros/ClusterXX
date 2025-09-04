@@ -19,8 +19,8 @@ class KMeans : cluster_method {
     arma::mat __centroids;
     std::vector<int> __labels;
 
-    int __n_clusters;
-    int __max_iter;
+    unsigned int __n_clusters;
+    unsigned int __max_iter;
     std::string __init;
     arma::mat __features;
 
@@ -32,7 +32,8 @@ class KMeans : cluster_method {
     arma::mat __recalc_centroids();
 
   public:
-    KMeans(int n_clusters = 8, int max_iter = 300,
+    KMeans(const unsigned int n_clusters = 8,
+           const unsigned int max_iter = 300,
            std::string init = "k-means++",
            std::optional<int> random_state = std::nullopt)
         : __n_clusters(n_clusters), __max_iter(max_iter), __init(init),

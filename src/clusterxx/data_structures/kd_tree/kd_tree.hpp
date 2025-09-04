@@ -52,10 +52,10 @@ class kd_tree {
     int __depth(std::unique_ptr<kd_node> &root);
     Metric metric;
     PairwiseMetric pairwise_metric;
-    int __leaf_size;
+    unsigned int __leaf_size;
 
   public:
-    kd_tree(const arma::mat &X, const int leaf_size = 40)
+    kd_tree(const arma::mat &X, const unsigned int leaf_size = 40)
         : __leaf_size(leaf_size) {
         assert(!X.empty());
         assert(leaf_size > 0);
