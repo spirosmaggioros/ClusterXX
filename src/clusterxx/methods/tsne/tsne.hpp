@@ -20,17 +20,19 @@ class TSNE : manifold_method {
     double __momentum = 0.5;
     double __min_grad_norm;
     unsigned int __n_iter_without_progress;
+    std::string __method;
     Metric metric;
 
     std::pair<int, int> __shape;
     arma::mat __features;
+    arma::mat __reduced_features;
 
     void __fit(const arma::mat &X);
     double __compute_beta(const arma::mat &distances, double target_perplexity,
                           int iter, double tolerance = 1e-5,
                           int max_iter = 200);
-    arma::mat __compute_pairwise_affinities(const arma::mat &features,
-                                            double perplexity);
+    arma::mat __compute_pairwise_affinities(const arma::mat &features);
+    arma::mat __symmetrize_sparse_affinities(const arma::mat &p_ji_sparse);
     std::pair<arma::mat, arma::mat>
     __compute_low_dim_affinities(const arma::mat &Y);
     arma::mat __kullback_leibler_gradient(const arma::mat &pairwise_affinities,
@@ -45,12 +47,14 @@ class TSNE : manifold_method {
          const double early_exaggeration = 12.0,
          const unsigned int max_iter = 1000,
          const double min_grad_norm = 1e-7,
-         const unsigned int n_iter_without_progress = 300)
+         const unsigned int n_iter_without_progress = 300,
+         const std::string method = "barnes_hut")
         : __n_components(n_components), __perplexity(perplexity),
           __learning_rate(learning_rate),
           __early_exaggeration(early_exaggeration), __max_iter(max_iter),
           __min_grad_norm(min_grad_norm),
-          __n_iter_without_progress(n_iter_without_progress) {
+          __n_iter_without_progress(n_iter_without_progress),
+          __method(method) {
         assert(n_components > 0);
         assert(perplexity > 0);
         assert(learning_rate > 0.0);
@@ -58,6 +62,7 @@ class TSNE : manifold_method {
         assert(max_iter >= 20);
         assert(min_grad_norm > 0.0);
         assert(n_iter_without_progress > 0);
+        assert(method == "barnes_hut" || method == "exact");
     }
     ~TSNE() {}
 
