@@ -10,16 +10,16 @@
 
 namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::squared_euclidean_distances>
-class TSNE : manifold_method {
+class TSNE : clusterxx::manifold_method {
   private:
-    unsigned int __n_components;
+    const unsigned int __n_components;
     double __perplexity;
     double __learning_rate;
     double __early_exaggeration;
-    unsigned int __max_iter;
+    const unsigned int __max_iter;
     double __momentum = 0.5;
-    double __min_grad_norm;
-    unsigned int __n_iter_without_progress;
+    const double __min_grad_norm;
+    const unsigned int __n_iter_without_progress;
     Metric metric;
 
     std::pair<int, int> __shape;
