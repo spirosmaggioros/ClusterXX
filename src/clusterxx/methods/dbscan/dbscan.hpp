@@ -3,15 +3,13 @@
 
 #include "clusterxx/base/cluster_method.hpp"
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
-#include "clusterxx/metrics/metrics.hpp"
 #include <armadillo>
 #include <assert.h>
 #include <memory>
 #include <unordered_map>
 
 namespace clusterxx {
-template <typename Metric = clusterxx::metrics::euclidean_distance,
-          class Algorithm = clusterxx::kd_tree<Metric>>
+template <class Algorithm = clusterxx::kd_tree<>>
 class DBSCAN : cluster_method {
   private:
     // just for now, no copy constructor

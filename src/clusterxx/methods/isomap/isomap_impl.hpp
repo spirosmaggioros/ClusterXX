@@ -4,8 +4,8 @@
 #include "clusterxx/data_structures/graph/graph.hpp"
 #include "isomap.hpp"
 
-template <typename Metric, class NeighAlgorithm>
-clusterxx::isomap<Metric, NeighAlgorithm>::isomap(
+template <class NeighAlgorithm>
+clusterxx::isomap<NeighAlgorithm>::isomap(
     const unsigned int &n_neighbors, const double &radius,
     const unsigned int &n_components)
     : __n_neighbors(n_neighbors), __radius(radius),
@@ -18,22 +18,21 @@ clusterxx::isomap<Metric, NeighAlgorithm>::isomap(
     }
 }
 
-template <typename Metric, class NeighAlgorithm>
-void clusterxx::isomap<Metric, NeighAlgorithm>::fit(const arma::mat &X) {
+template <class NeighAlgorithm>
+void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
     assert(!X.empty());
     __neigh_algorithm = std::make_unique<NeighAlgorithm>(X);
     Graph d_g("undirected");
 
     for (size_t i = 0; i < X.n_rows; i++) {
-        std::cout << X.row(i).t() << '\n';
         std::vector<int> _inds;
         std::vector<double> _dists;
         if (__radius > 0.0) {
-            _inds, _dists =
+            std::tie(_inds, _dists) =
                        __neigh_algorithm->query_radius(X.row(i).t(), __radius);
         } else {
-            _inds,
-                _dists = __neigh_algorithm->query(X.row(i).t(), __n_neighbors);
+            std::tie(_inds,_dists) =
+                __neigh_algorithm->query(X.row(i).t(), __n_neighbors);
         }
         for (size_t j = 0; j < _inds.size(); j++) {
             if (_inds[j] != i) {
@@ -61,12 +60,44 @@ void clusterxx::isomap<Metric, NeighAlgorithm>::fit(const arma::mat &X) {
     arma::mat eigvec;
 
     arma::eig_sym(eigval, eigvec, t_d);
-
+    arma::uvec indices = arma::sort_index(eigval, "descend");
+    indices = indices.head(__n_components);
     arma::mat Y(N, __n_components);
 
-    std::cout << eigval << '\n';
-    std::cout << " ######### " << '\n';
-    std::cout << eigvec << '\n';
+    for (int i = 0; i < __n_components; i++) {
+        double _l = eigval(indices(i));
+        arma::vec v = eigvec.col(indices(i));
+        Y.col(i) = v * std::sqrt(_l);
+    }
+
+    __features = Y;
+    __shape.first = Y.n_rows;
+    __shape.second = Y.n_cols;
+}
+
+template <class NeighAlgorithm>
+void clusterxx::isomap<NeighAlgorithm>::fit(const arma::mat &X) {
+    __features.clear();
+    __fit(X);
+}
+
+template <class NeighAlgorithm>
+arma::mat clusterxx::isomap<NeighAlgorithm>::fit_transform(const arma::mat &X) {
+    __features.clear();
+    __fit(X);
+    return __features;
+}
+
+template <class NeighAlgorithm>
+std::pair<int, int> clusterxx::isomap<NeighAlgorithm>::get_shape() const {
+    assert(!__features.empty());
+    return __shape;
+}
+
+template <class NeighAlgorithm>
+arma::mat clusterxx::isomap<NeighAlgorithm>::get_features() const {
+    assert(!__features.empty());
+    return __features;
 }
 
 #endif

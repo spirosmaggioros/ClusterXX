@@ -3,21 +3,21 @@
 
 #include "clusterxx/base/manifold_method.hpp"
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
-#include "clusterxx/metrics/metrics.hpp"
 #include <memory>
 
 namespace clusterxx {
-template <typename Metric = clusterxx::pairwise_distances::euclidean_distances,
-          class NeighAlgorithm = clusterxx::kd_tree<Metric>>
+template <class NeighAlgorithm = clusterxx::kd_tree<>>
 class isomap : clusterxx::manifold_method {
   private:
     const unsigned int __n_neighbors;
     const double __radius;
     const unsigned int __n_components;
-    Metric metric;
+    arma::mat __features;
+    std::pair<int, int> __shape;
     // just for now, no copy constructor
     std::unique_ptr<NeighAlgorithm> __neigh_algorithm;
 
+    void __fit(const arma::mat &X);
   public:
     isomap(const unsigned int &n_neighbors = 5, const double &radius = 0.0,
            const unsigned int &n_components = 2);
@@ -28,5 +28,7 @@ class isomap : clusterxx::manifold_method {
     arma::mat get_features() const;
 };
 } // namespace clusterxx
+
+#include "isomap_impl.hpp"
 
 #endif

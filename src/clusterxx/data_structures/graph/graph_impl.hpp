@@ -3,6 +3,7 @@
 
 #include "graph.hpp"
 #include <assert.h>
+#include <iostream>
 
 clusterxx::Graph::Graph(const std::string &type)
     : __type(type) {
@@ -32,7 +33,6 @@ clusterxx::Graph::floyd_warshall() {
             dists[u][neigh] = dist;
         }
     }
-
     for (int k = 0; k < total_nodes; k++) {
         for (int i = 0; i < total_nodes; i++) {
             for (int j = 0; j < total_nodes; j++) {

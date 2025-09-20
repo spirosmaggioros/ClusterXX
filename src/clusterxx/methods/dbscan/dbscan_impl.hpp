@@ -3,8 +3,8 @@
 
 #include "dbscan.hpp"
 
-template <typename Metric, class Algorithm>
-void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
+template <class Algorithm>
+void clusterxx::DBSCAN<Algorithm>::__fit(const arma::mat &X) {
     assert(!X.empty());
     __algorithm = std::make_unique<Algorithm>(X, __leaf_size);
     int cluster_id = 0;
@@ -55,25 +55,25 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
     }
 }
 
-template <typename Metric, class Algorithm>
-void clusterxx::DBSCAN<Metric, Algorithm>::fit(const arma::mat &X) {
+template <class Algorithm>
+void clusterxx::DBSCAN<Algorithm>::fit(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
     __fit(X);
 }
 
-template <typename Metric, class Algorithm>
+template <class Algorithm>
 std::vector<int>
-clusterxx::DBSCAN<Metric, Algorithm>::fit_predict(const arma::mat &X) {
+clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
     __fit(X);
     return __labels;
 }
 
-template <typename Metric, class Algorithm>
+template <class Algorithm>
 std::vector<int>
-clusterxx::DBSCAN<Metric, Algorithm>::predict(const arma::mat &X) {
+clusterxx::DBSCAN<Algorithm>::predict(const arma::mat &X) {
     std::cout << "[WARNING] predict() function is not implemented for this "
                  "class. Use fit_predict() instead"
               << '\n';
@@ -81,8 +81,8 @@ clusterxx::DBSCAN<Metric, Algorithm>::predict(const arma::mat &X) {
     return {};
 }
 
-template <typename Metric, class Algorithm>
-std::vector<int> clusterxx::DBSCAN<Metric, Algorithm>::get_labels() const {
+template <class Algorithm>
+std::vector<int> clusterxx::DBSCAN<Algorithm>::get_labels() const {
     assert(!__assignments.empty());
     assert(!__labels.empty());
     return __labels;
