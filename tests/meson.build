@@ -11,6 +11,7 @@ tests = {
     'tsne_tests': 'tsne/tsne_tests.cc',
     'kd_tree_tests': 'kd_tree/kd_tree_tests.cc',
     'pca_tests': 'pca/pca_tests.cc',
+    'graph_tests': 'graph/graph_tests.cc',
 }
 
 foreach test_name, test_source : tests

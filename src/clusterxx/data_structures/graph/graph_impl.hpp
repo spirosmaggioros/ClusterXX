@@ -3,7 +3,7 @@
 
 #include "graph.hpp"
 #include <assert.h>
-#include <iostream>
+#include <cfloat>
 
 clusterxx::Graph::Graph(const std::string &type)
     : __type(type) {
@@ -26,7 +26,7 @@ std::vector<std::vector<double>>
 clusterxx::Graph::floyd_warshall() {
     size_t total_nodes = __adj_list.size();
     std::vector<std::vector<double>>
-        dists(total_nodes, std::vector<double>(total_nodes, 0.0));
+        dists(total_nodes, std::vector<double>(total_nodes, DBL_MAX));
 
     for (auto &[u, neigh_u]: __adj_list) {
         for (auto &[neigh, dist]: neigh_u) {
