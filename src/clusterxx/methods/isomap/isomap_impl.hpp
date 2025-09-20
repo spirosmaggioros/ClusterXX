@@ -5,9 +5,9 @@
 #include "isomap.hpp"
 
 template <class NeighAlgorithm>
-clusterxx::isomap<NeighAlgorithm>::isomap(
-    const unsigned int &n_neighbors, const double &radius,
-    const unsigned int &n_components)
+clusterxx::isomap<NeighAlgorithm>::isomap(const unsigned int &n_neighbors,
+                                          const double &radius,
+                                          const unsigned int &n_components)
     : __n_neighbors(n_neighbors), __radius(radius),
       __n_components(n_components) {
     assert(radius >= 0.0);
@@ -29,14 +29,14 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
         std::vector<double> _dists;
         if (__radius > 0.0) {
             std::tie(_inds, _dists) =
-                       __neigh_algorithm->query_radius(X.row(i).t(), __radius);
+                __neigh_algorithm->query_radius(X.row(i).t(), __radius);
         } else {
-            std::tie(_inds,_dists) =
+            std::tie(_inds, _dists) =
                 __neigh_algorithm->query(X.row(i).t(), __n_neighbors);
         }
         for (size_t j = 0; j < _inds.size(); j++) {
             if (_inds[j] != i) {
-                d_g.insert_edge(i, j, _dists[j]);
+                d_g.insert_edge(i, _inds[j], _dists[j]);
             }
         }
     }

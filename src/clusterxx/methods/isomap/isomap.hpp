@@ -18,6 +18,7 @@ class isomap : clusterxx::manifold_method {
     std::unique_ptr<NeighAlgorithm> __neigh_algorithm;
 
     void __fit(const arma::mat &X);
+
   public:
     isomap(const unsigned int &n_neighbors = 5, const double &radius = 0.0,
            const unsigned int &n_components = 2);
