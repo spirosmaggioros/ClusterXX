@@ -11,9 +11,9 @@ TEST_CASE("Testing graph shortest path with floyd warshall", "[Graph]") {
     g.insert_edge(1, 4, 5);
     g.insert_edge(2, 3, 1);
     g.insert_edge(3, 4, 5);
-    std::vector<std::vector<double>> dists = g.floyd_warshall();
+    std::vector<double> dists = g.floyd_warshall();
 
-    REQUIRE(dists[0][4] == 7);
-    REQUIRE(dists[2][4] == 6);
+    REQUIRE(dists[4] == 7);
+    REQUIRE(dists[5 * 2 + 4] == 6);
 }
 

@@ -17,21 +17,25 @@ void clusterxx::Graph::insert_edge(const unsigned int &u, const unsigned int &v,
     }
 }
 
-std::vector<std::vector<double>> clusterxx::Graph::floyd_warshall() {
+size_t clusterxx::Graph::size() const { return __adj_list.size(); }
+
+std::vector<double> clusterxx::Graph::floyd_warshall() {
     size_t total_nodes = __adj_list.size();
-    std::vector<std::vector<double>> dists(
-        total_nodes, std::vector<double>(total_nodes, DBL_MAX));
+    std::vector<double> dists(total_nodes * total_nodes, DBL_MAX);
 
     for (auto &[u, neigh_u] : __adj_list) {
         for (auto &[neigh, dist] : neigh_u) {
-            dists[u][neigh] = dist;
+            dists[total_nodes * u + neigh] = dist;
         }
     }
+
     for (int k = 0; k < total_nodes; k++) {
         for (int i = 0; i < total_nodes; i++) {
             for (int j = 0; j < total_nodes; j++) {
-                if (dists[i][j] > dists[i][k] + dists[k][j]) {
-                    dists[i][j] = dists[i][k] + dists[k][j];
+                if (dists[total_nodes * i + j] >
+                    dists[total_nodes * i + k] + dists[total_nodes * k + j]) {
+                    dists[total_nodes * i + j] =
+                        dists[total_nodes * i + k] + dists[total_nodes * k + j];
                 }
             }
         }

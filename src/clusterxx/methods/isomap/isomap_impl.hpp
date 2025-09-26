@@ -41,12 +41,12 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
         }
     }
 
-    std::vector<std::vector<double>> t_d_g = d_g.floyd_warshall();
-    size_t N = t_d_g.size();
+    std::vector<double> t_d_g = d_g.floyd_warshall();
+    size_t N = d_g.size();
     arma::mat D(N, N);
     for (size_t i = 0; i < N; i++) {
         for (size_t j = 0; j < N; j++) {
-            D(i, j) = t_d_g[i][j];
+            D(i, j) = t_d_g[N * i + j];
         }
     }
 

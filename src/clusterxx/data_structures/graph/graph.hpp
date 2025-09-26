@@ -18,7 +18,8 @@ class Graph {
 
     void insert_edge(const unsigned int &u, const unsigned int &v,
                      const double &key);
-    std::vector<std::vector<double>> floyd_warshall();
+    size_t size() const;
+    std::vector<double> floyd_warshall();
 };
 } // namespace clusterxx
 
