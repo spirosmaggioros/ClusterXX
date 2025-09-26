@@ -22,6 +22,13 @@ class TSNE : clusterxx::manifold_method {
     const unsigned int __n_iter_without_progress;
     Metric metric;
 
+    struct __gradient_data {
+        arma::mat pairwise_affinities;
+        arma::mat low_dim_affinities;
+        arma::mat low_dim_features;
+        arma::mat pairwise_dists;
+    };
+
     std::pair<int, int> __shape;
     arma::mat __features;
 
@@ -33,10 +40,7 @@ class TSNE : clusterxx::manifold_method {
                                             double perplexity);
     std::pair<arma::mat, arma::mat>
     __compute_low_dim_affinities(const arma::mat &Y);
-    arma::mat __kullback_leibler_gradient(const arma::mat &pairwise_affinities,
-                                          const arma::mat &low_dim_affinities,
-                                          const arma::mat &low_dim_features,
-                                          const arma::mat &pairwise_dists);
+    arma::mat __kullback_leibler_gradient(const __gradient_data &data);
 
   public:
     TSNE(const unsigned int n_components = 2,

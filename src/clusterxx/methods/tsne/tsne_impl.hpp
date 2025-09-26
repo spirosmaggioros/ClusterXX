@@ -6,6 +6,9 @@
 #include <float.h>
 #include <random>
 
+#include <chrono>
+#include <iostream>
+
 template <typename Metric>
 double clusterxx::TSNE<Metric>::__compute_beta(const arma::mat &distances,
                                                double target_perplexity,
@@ -80,7 +83,7 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 template <typename Metric>
 std::pair<arma::mat, arma::mat>
 clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
-    arma::mat pairwise_dists = metric(Y, arma::mat());
+    arma::mat pairwise_dists = metric(Y);
     arma::mat q_ij = 1.0 / (1.0 + pairwise_dists);
     q_ij.diag().zeros();
     double total_sum = arma::accu(q_ij);
@@ -90,18 +93,16 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
 }
 
 template <typename Metric>
-arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
-    const arma::mat &pairwise_affinities, const arma::mat &low_dim_affinities,
-    const arma::mat &low_dim_features, const arma::mat &pairwise_dists) {
-    assert(pairwise_affinities.n_rows == low_dim_affinities.n_rows);
-    assert(pairwise_affinities.n_cols == low_dim_affinities.n_cols);
+arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(const __gradient_data &data) {
+    assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
+    assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
 
     arma::mat F =
-        4.0 * (__early_exaggeration * pairwise_affinities - low_dim_affinities);
-    F /= (1.0 + pairwise_dists);
+        4.0 * (__early_exaggeration * data.pairwise_affinities - data.low_dim_affinities);
+    F /= (1.0 + data.pairwise_dists);
     F.diag().zeros();
-    arma::mat gradient = arma::diagmat(arma::sum(F, 1)) * low_dim_features -
-                         F * low_dim_features;
+    arma::mat gradient = arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
+                         F * data.low_dim_features;
     return gradient;
 }
 
@@ -126,6 +127,10 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             Y(i, j) = dist(gen);
         }
     }
+    __gradient_data g_data = {
+        .pairwise_affinities = symmetrized,
+        .low_dim_features = Y
+    };
 
     arma::mat Y_inc = arma::zeros<arma::mat>(Y.n_rows, Y.n_cols);
     double best_loss = std::numeric_limits<double>::infinity();
@@ -138,12 +143,21 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             __early_exaggeration = 1.0;
         }
 
+        auto t1 = std::chrono::high_resolution_clock::now();
         // compute low dimensional affinities(q_ij)
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
+        g_data.low_dim_affinities = q_ij;
+        g_data.pairwise_dists = sol_pairwise_dists;
+        auto t2 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+        std::cout << "__compute_low_dim_affinities took: " << ms_double << '\n';
 
+        t1 = std::chrono::high_resolution_clock::now();
         // compute gradient
-        arma::mat gradients = __kullback_leibler_gradient(symmetrized, q_ij, Y,
-                                                          sol_pairwise_dists);
+        arma::mat gradients = __kullback_leibler_gradient(g_data);
+        t2 = std::chrono::high_resolution_clock::now();
+        ms_double = t2 - t1;
+        std::cout << "__kullback_leibler_gradient took: " << ms_double << '\n';
         double grad_norm = arma::norm(gradients, "fro");
         if (grad_norm < __min_grad_norm) {
             break;
@@ -165,9 +179,13 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             }
         }
 
+        t1 = std::chrono::high_resolution_clock::now();
         // update solution
         Y_inc = (__momentum * Y_inc) - (__learning_rate * gradients);
         Y += Y_inc;
+        t2 = std::chrono::high_resolution_clock::now();
+        ms_double = t2 - t1;
+        std::cout << "updating solution took: " << ms_double << '\n';
     }
 
     __features = Y;
