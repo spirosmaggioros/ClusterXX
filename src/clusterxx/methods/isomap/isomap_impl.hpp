@@ -84,34 +84,32 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
         Y.col(i) = v * std::sqrt(_l);
     }
 
-    __features = Y;
+    __latent_features = Y;
     __shape.first = Y.n_rows;
     __shape.second = Y.n_cols;
 }
 
 template <class NeighAlgorithm>
 void clusterxx::isomap<NeighAlgorithm>::fit(const arma::mat &X) {
-    __features.clear();
     __fit(X);
 }
 
 template <class NeighAlgorithm>
 arma::mat clusterxx::isomap<NeighAlgorithm>::fit_transform(const arma::mat &X) {
-    __features.clear();
     __fit(X);
-    return __features;
+    return __latent_features;
 }
 
 template <class NeighAlgorithm>
 std::pair<int, int> clusterxx::isomap<NeighAlgorithm>::get_shape() const {
-    assert(!__features.empty());
+    assert(!__latent_features.empty()); // make sure to call fit/fit_transform first
     return __shape;
 }
 
 template <class NeighAlgorithm>
 arma::mat clusterxx::isomap<NeighAlgorithm>::get_features() const {
-    assert(!__features.empty());
-    return __features;
+    assert(!__latent_features.empty()); // make sure to call fit/fit_transform first
+    return __latent_features;
 }
 
 #endif

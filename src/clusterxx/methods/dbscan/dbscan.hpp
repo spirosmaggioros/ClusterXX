@@ -23,15 +23,8 @@ class DBSCAN : cluster_method {
     void __fit(const arma::mat &X);
 
   public:
-    DBSCAN(const double eps = 0.5,
-           const unsigned int min_samples = 5,
-           const unsigned int leaf_size = 30)
-        : __eps(eps), __min_samples(min_samples), __leaf_size(leaf_size) {
-        assert(eps > 0.0);
-        assert(min_samples > 0);
-        assert(leaf_size > 0);
-    }
-
+    DBSCAN(const double eps = 0.5, const unsigned int min_samples = 5,
+           const unsigned int leaf_size = 30);
     ~DBSCAN() {}
 
     void fit(const arma::mat &X) override;

@@ -13,7 +13,7 @@ class isomap : clusterxx::manifold_method {
     const double __radius;
     const unsigned int __n_components;
     const std::string __path_method;
-    arma::mat __features;
+    arma::mat __latent_features;
     std::pair<int, int> __shape;
     // just for now, no copy constructor
     std::unique_ptr<NeighAlgorithm> __neigh_algorithm;

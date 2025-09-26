@@ -172,9 +172,30 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         Y += Y_inc;
     }
 
-    __features = Y;
+    __latent_features = Y;
     __shape.first = Y.n_rows;
     __shape.second = __n_components;
+}
+
+template <typename Metric>
+clusterxx::TSNE<Metric>::TSNE(const unsigned int n_components,
+                              const double perplexity,
+                              const double learning_rate,
+                              const double early_exaggeration,
+                              const unsigned int max_iter,
+                              const double min_grad_norm,
+                              const unsigned int n_iter_without_progress)
+    : __n_components(n_components), __perplexity(perplexity),
+      __learning_rate(learning_rate), __early_exaggeration(early_exaggeration),
+      __max_iter(max_iter), __min_grad_norm(min_grad_norm),
+      __n_iter_without_progress(n_iter_without_progress) {
+    assert(n_components > 0);
+    assert(perplexity > 0);
+    assert(learning_rate > 0.0);
+    assert(early_exaggeration >= 1.0);
+    assert(max_iter >= 20);
+    assert(min_grad_norm > 0.0);
+    assert(n_iter_without_progress > 0);
 }
 
 template <typename Metric>
@@ -185,17 +206,21 @@ void clusterxx::TSNE<Metric>::fit(const arma::mat &X) {
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::fit_transform(const arma::mat &X) {
     __fit(X);
-    return __features;
+    return __latent_features;
 }
 
 template <typename Metric>
 std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() const {
+    assert(!__latent_features
+                .empty()); // make sure to call fit/fit_transform first
     return __shape;
 }
 
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::get_features() const {
-    return __features;
+    assert(!__latent_features
+                .empty()); // make sure to call fit/fit_transform first
+    return __latent_features;
 }
 
 #endif

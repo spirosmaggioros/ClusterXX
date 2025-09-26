@@ -31,7 +31,7 @@ class TSNE : clusterxx::manifold_method {
     };
 
     std::pair<int, int> __shape;
-    arma::mat __features;
+    arma::mat __latent_features;
 
     void __fit(const arma::mat &X);
     double __compute_beta(const arma::mat &distances, double target_perplexity,
@@ -48,20 +48,7 @@ class TSNE : clusterxx::manifold_method {
          const double learning_rate = 200,
          const double early_exaggeration = 12.0,
          const unsigned int max_iter = 1000, const double min_grad_norm = 1e-7,
-         const unsigned int n_iter_without_progress = 300)
-        : __n_components(n_components), __perplexity(perplexity),
-          __learning_rate(learning_rate),
-          __early_exaggeration(early_exaggeration), __max_iter(max_iter),
-          __min_grad_norm(min_grad_norm),
-          __n_iter_without_progress(n_iter_without_progress) {
-        assert(n_components > 0);
-        assert(perplexity > 0);
-        assert(learning_rate > 0.0);
-        assert(early_exaggeration >= 1.0);
-        assert(max_iter >= 20);
-        assert(min_grad_norm > 0.0);
-        assert(n_iter_without_progress > 0);
-    }
+         const unsigned int n_iter_without_progress = 300);
     ~TSNE() {}
 
     void fit(const arma::mat &X) override;

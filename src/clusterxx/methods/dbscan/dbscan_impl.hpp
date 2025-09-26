@@ -56,6 +56,16 @@ void clusterxx::DBSCAN<Algorithm>::__fit(const arma::mat &X) {
 }
 
 template <class Algorithm>
+clusterxx::DBSCAN<Algorithm>::DBSCAN(const double eps,
+                                     const unsigned int min_samples,
+                                     const unsigned int leaf_size)
+    : __eps(eps), __min_samples(min_samples), __leaf_size(leaf_size) {
+    assert(eps > 0.0);
+    assert(min_samples > 0);
+    assert(leaf_size > 0);
+}
+
+template <class Algorithm>
 void clusterxx::DBSCAN<Algorithm>::fit(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
@@ -63,8 +73,7 @@ void clusterxx::DBSCAN<Algorithm>::fit(const arma::mat &X) {
 }
 
 template <class Algorithm>
-std::vector<int>
-clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
+std::vector<int> clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
     __fit(X);
@@ -72,8 +81,7 @@ clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
 }
 
 template <class Algorithm>
-std::vector<int>
-clusterxx::DBSCAN<Algorithm>::predict(const arma::mat &X) {
+std::vector<int> clusterxx::DBSCAN<Algorithm>::predict(const arma::mat &X) {
     std::cout << "[WARNING] predict() function is not implemented for this "
                  "class. Use fit_predict() instead"
               << '\n';
