@@ -1,6 +1,5 @@
 #ifndef CLUSTERXX_METHODS_TSNE_IMPL_HPP
 #define CLUSTERXX_METHODS_TSNE_IMPL_HPP
-#define ARMA_USE_BLAS
 
 #include "tsne.hpp"
 #include <float.h>
