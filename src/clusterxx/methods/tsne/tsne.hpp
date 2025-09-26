@@ -9,7 +9,8 @@
 #include "clusterxx/metrics/metrics.hpp"
 
 namespace clusterxx {
-template <typename Metric = clusterxx::pairwise_distances::squared_euclidean_distances>
+template <typename Metric =
+              clusterxx::pairwise_distances::squared_euclidean_distances>
 class TSNE : clusterxx::manifold_method {
   private:
     const unsigned int __n_components;
@@ -43,12 +44,10 @@ class TSNE : clusterxx::manifold_method {
     arma::mat __kullback_leibler_gradient(const __gradient_data &data);
 
   public:
-    TSNE(const unsigned int n_components = 2,
-         const double perplexity = 30.0,
+    TSNE(const unsigned int n_components = 2, const double perplexity = 30.0,
          const double learning_rate = 200,
          const double early_exaggeration = 12.0,
-         const unsigned int max_iter = 1000,
-         const double min_grad_norm = 1e-7,
+         const unsigned int max_iter = 1000, const double min_grad_norm = 1e-7,
          const unsigned int n_iter_without_progress = 300)
         : __n_components(n_components), __perplexity(perplexity),
           __learning_rate(learning_rate),

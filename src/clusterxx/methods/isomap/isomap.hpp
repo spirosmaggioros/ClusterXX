@@ -12,6 +12,7 @@ class isomap : clusterxx::manifold_method {
     const unsigned int __n_neighbors;
     const double __radius;
     const unsigned int __n_components;
+    const std::string __path_method;
     arma::mat __features;
     std::pair<int, int> __shape;
     // just for now, no copy constructor
@@ -21,7 +22,8 @@ class isomap : clusterxx::manifold_method {
 
   public:
     isomap(const unsigned int &n_neighbors = 5, const double &radius = 0.0,
-           const unsigned int &n_components = 2);
+           const unsigned int &n_components = 2,
+           const std::string &path_method = "auto");
     ~isomap() {}
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;

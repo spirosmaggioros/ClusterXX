@@ -7,9 +7,10 @@
 template <class NeighAlgorithm>
 clusterxx::isomap<NeighAlgorithm>::isomap(const unsigned int &n_neighbors,
                                           const double &radius,
-                                          const unsigned int &n_components)
+                                          const unsigned int &n_components,
+                                          const std::string &path_method)
     : __n_neighbors(n_neighbors), __radius(radius),
-      __n_components(n_components) {
+      __n_components(n_components), __path_method(path_method) {
     assert(radius >= 0.0);
     if (radius > 0.0) {
         assert(n_neighbors == 0); // Please use either radius or n_neighbors
@@ -41,12 +42,25 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
         }
     }
 
-    std::vector<double> t_d_g = d_g.floyd_warshall();
-    size_t N = d_g.size();
+    int64_t E = d_g.n_edges();
+    int64_t N = d_g.n_nodes();
     arma::mat D(N, N);
-    for (size_t i = 0; i < N; i++) {
-        for (size_t j = 0; j < N; j++) {
-            D(i, j) = t_d_g[N * i + j];
+    if ((__path_method == "auto" &&
+         N * N * N >= N * E + N * N * std::log2(N)) ||
+        __path_method == "D") {
+        std::vector<std::vector<double>> t_d_g =
+            d_g.dijkstra_all_shortest_paths();
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < N; j++) {
+                D(i, j) = t_d_g[i][j];
+            }
+        }
+    } else {
+        std::vector<double> t_d_g = d_g.floyd_warshall_all_shortest_paths();
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < N; j++) {
+                D(i, j) = t_d_g[N * i + j];
+            }
         }
     }
 
