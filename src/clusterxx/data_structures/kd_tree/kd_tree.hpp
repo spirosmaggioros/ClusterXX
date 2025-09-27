@@ -21,10 +21,9 @@ class kd_tree {
         arma::mat __extra_points;
         std::vector<int> __extra_points_inds;
         size_t __ind;
-        size_t __feature_size;
 
         kd_node(const arma::vec &point, const size_t ind)
-            : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
+            : __point(point), __ind(ind) {}
     };
 
     struct Compare {
