@@ -99,6 +99,15 @@ void clusterxx::MiniBatchKMeans<Metric>::__fit(const arma::mat &X) {
 }
 
 template <typename Metric>
+clusterxx::MiniBatchKMeans<Metric>::MiniBatchKMeans(
+    const uint16_t n_clusters, const std::string init, const uint32_t max_iter,
+    const uint32_t batch_size, std::optional<int> random_state)
+    : __n_clusters(n_clusters), __init(init), __max_iter(max_iter),
+      __batch_size(batch_size), __random_state(random_state) {
+    assert(init == "k-means++" || init == "random");
+}
+
+template <typename Metric>
 void clusterxx::MiniBatchKMeans<Metric>::fit(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();

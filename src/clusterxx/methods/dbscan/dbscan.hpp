@@ -15,16 +15,16 @@ class DBSCAN : cluster_method {
     // just for now, no copy constructor
     std::unique_ptr<Algorithm> __algorithm;
     double __eps;
-    unsigned int __min_samples;
-    unsigned int __leaf_size;
+    const uint16_t __min_samples;
+    const uint16_t __leaf_size;
     std::unordered_map<int, int> __assignments;
     std::vector<int> __labels;
 
     void __fit(const arma::mat &X);
 
   public:
-    DBSCAN(const double eps = 0.5, const unsigned int min_samples = 5,
-           const unsigned int leaf_size = 30);
+    DBSCAN(const double eps = 0.5, const uint16_t min_samples = 5,
+           const uint16_t leaf_size = 30);
     ~DBSCAN() {}
 
     void fit(const arma::mat &X) override;

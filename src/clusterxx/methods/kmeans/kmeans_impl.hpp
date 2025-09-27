@@ -6,6 +6,17 @@
 #include <assert.h>
 #include <ranges>
 
+template <typename Metric>
+clusterxx::KMeans<Metric>::KMeans(const uint16_t n_clusters,
+                                  const uint32_t max_iter, std::string init,
+                                  std::optional<int> random_state)
+    : __n_clusters(n_clusters), __max_iter(max_iter), __init(init),
+      __random_state(random_state) {
+    assert(max_iter > 0);
+    assert(n_clusters > 0);
+    assert(init == "k-means++" || init == "random");
+}
+
 template <typename Metric> void clusterxx::KMeans<Metric>::__init_centroids() {
     if (__init == "random") {
         __centroids.resize(__n_clusters, __features.n_cols);

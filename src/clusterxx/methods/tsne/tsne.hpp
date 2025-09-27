@@ -13,14 +13,14 @@ template <typename Metric =
               clusterxx::pairwise_distances::squared_euclidean_distances>
 class TSNE : clusterxx::manifold_method {
   private:
-    const unsigned int __n_components;
+    const uint16_t __n_components;
     double __perplexity;
     double __learning_rate;
     double __early_exaggeration;
-    const unsigned int __max_iter;
+    const uint32_t __max_iter;
     double __momentum = 0.5;
     const double __min_grad_norm;
-    const unsigned int __n_iter_without_progress;
+    const uint32_t __n_iter_without_progress;
     Metric metric;
 
     struct __gradient_data {
@@ -30,7 +30,7 @@ class TSNE : clusterxx::manifold_method {
         arma::mat pairwise_dists;
     };
 
-    std::pair<int, int> __shape;
+    std::pair<size_t, size_t> __shape;
     arma::mat __latent_features;
 
     void __fit(const arma::mat &X);
@@ -44,11 +44,11 @@ class TSNE : clusterxx::manifold_method {
     arma::mat __kullback_leibler_gradient(const __gradient_data &data);
 
   public:
-    TSNE(const unsigned int n_components = 2, const double perplexity = 30.0,
+    TSNE(const uint16_t n_components = 2, const double perplexity = 30.0,
          const double learning_rate = 200,
-         const double early_exaggeration = 12.0,
-         const unsigned int max_iter = 1000, const double min_grad_norm = 1e-7,
-         const unsigned int n_iter_without_progress = 300);
+         const double early_exaggeration = 12.0, const uint32_t max_iter = 1000,
+         const double min_grad_norm = 1e-7,
+         const uint32_t n_iter_without_progress = 300);
     ~TSNE() {}
 
     void fit(const arma::mat &X) override;

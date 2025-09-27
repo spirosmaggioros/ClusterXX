@@ -5,9 +5,9 @@
 #include "isomap.hpp"
 
 template <class NeighAlgorithm>
-clusterxx::isomap<NeighAlgorithm>::isomap(const unsigned int &n_neighbors,
+clusterxx::isomap<NeighAlgorithm>::isomap(const uint16_t &n_neighbors,
                                           const double &radius,
-                                          const unsigned int &n_components,
+                                          const uint16_t &n_components,
                                           const std::string &path_method)
     : __n_neighbors(n_neighbors), __radius(radius),
       __n_components(n_components), __path_method(path_method) {
@@ -42,23 +42,23 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
         }
     }
 
-    int64_t E = d_g.n_edges();
-    int64_t N = d_g.n_nodes();
+    uint64_t E = d_g.n_edges();
+    uint64_t N = d_g.n_nodes();
     arma::mat D(N, N);
     if ((__path_method == "auto" &&
          N * N * N >= N * E + N * N * std::log2(N)) ||
         __path_method == "D") {
         std::vector<std::vector<double>> t_d_g =
             d_g.dijkstra_all_shortest_paths();
-        for (size_t i = 0; i < N; i++) {
-            for (size_t j = 0; j < N; j++) {
+        for (uint16_t i = 0; i < N; i++) {
+            for (uint16_t j = 0; j < N; j++) {
                 D(i, j) = t_d_g[i][j];
             }
         }
     } else {
         std::vector<double> t_d_g = d_g.floyd_warshall_all_shortest_paths();
-        for (size_t i = 0; i < N; i++) {
-            for (size_t j = 0; j < N; j++) {
+        for (uint16_t i = 0; i < N; i++) {
+            for (uint16_t j = 0; j < N; j++) {
                 D(i, j) = t_d_g[N * i + j];
             }
         }
@@ -78,7 +78,7 @@ void clusterxx::isomap<NeighAlgorithm>::__fit(const arma::mat &X) {
     indices = indices.head(__n_components);
     arma::mat Y(N, __n_components);
 
-    for (int i = 0; i < __n_components; i++) {
+    for (uint16_t i = 0; i < __n_components; i++) {
         double _l = eigval(indices(i));
         arma::vec v = eigvec.col(indices(i));
         Y.col(i) = v * std::sqrt(_l);
@@ -101,14 +101,16 @@ arma::mat clusterxx::isomap<NeighAlgorithm>::fit_transform(const arma::mat &X) {
 }
 
 template <class NeighAlgorithm>
-std::pair<int, int> clusterxx::isomap<NeighAlgorithm>::get_shape() const {
-    assert(!__latent_features.empty()); // make sure to call fit/fit_transform first
+std::pair<size_t, size_t> clusterxx::isomap<NeighAlgorithm>::get_shape() const {
+    assert(!__latent_features
+                .empty()); // make sure to call fit/fit_transform first
     return __shape;
 }
 
 template <class NeighAlgorithm>
 arma::mat clusterxx::isomap<NeighAlgorithm>::get_features() const {
-    assert(!__latent_features.empty()); // make sure to call fit/fit_transform first
+    assert(!__latent_features
+                .empty()); // make sure to call fit/fit_transform first
     return __latent_features;
 }
 

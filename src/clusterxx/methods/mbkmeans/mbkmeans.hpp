@@ -16,9 +16,9 @@ class MiniBatchKMeans : cluster_method {
     std::vector<int> __labels;
     std::vector<int> __center_counts;
 
-    unsigned int __n_clusters;
-    unsigned int __max_iter;
-    unsigned int __batch_size;
+    const uint16_t __n_clusters;
+    const uint32_t __max_iter;
+    const uint32_t __batch_size;
     std::string __init;
     arma::mat __features;
 
@@ -29,16 +29,11 @@ class MiniBatchKMeans : cluster_method {
     void __assign_labels(const arma::mat &X, const arma::uvec &batches);
 
   public:
-    MiniBatchKMeans(const unsigned int n_clusters = 8,
+    MiniBatchKMeans(const uint16_t n_clusters = 8,
                     const std::string init = "k-means++",
-                    const unsigned int max_iter = 100,
-                    const unsigned int batch_size = 1024,
-                    std::optional<int> random_state = std::nullopt)
-        : __n_clusters(n_clusters), __init(init), __max_iter(max_iter),
-          __batch_size(batch_size), __random_state(random_state) {
-        assert(init == "k-means++" || init == "random");
-    }
-
+                    const uint32_t max_iter = 100,
+                    const uint32_t batch_size = 1024,
+                    std::optional<int> random_state = std::nullopt);
     ~MiniBatchKMeans() {}
 
     void fit(const arma::mat &X) override;

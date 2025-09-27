@@ -130,7 +130,7 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 
     arma::mat Y_inc = arma::zeros<arma::mat>(Y.n_rows, Y.n_cols);
     double best_loss = std::numeric_limits<double>::infinity();
-    int n_iter_no_progress = 0;
+    uint32_t n_iter_no_progress = 0;
     for (int i = 0; i < __max_iter; i++) {
         if (i == static_cast<int>(0.25 * __max_iter)) [[unlikely]] {
             // increase momentum and set early exaggeration to 1
@@ -178,13 +178,13 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 }
 
 template <typename Metric>
-clusterxx::TSNE<Metric>::TSNE(const unsigned int n_components,
+clusterxx::TSNE<Metric>::TSNE(const uint16_t n_components,
                               const double perplexity,
                               const double learning_rate,
                               const double early_exaggeration,
-                              const unsigned int max_iter,
+                              const uint32_t max_iter,
                               const double min_grad_norm,
-                              const unsigned int n_iter_without_progress)
+                              const uint32_t n_iter_without_progress)
     : __n_components(n_components), __perplexity(perplexity),
       __learning_rate(learning_rate), __early_exaggeration(early_exaggeration),
       __max_iter(max_iter), __min_grad_norm(min_grad_norm),

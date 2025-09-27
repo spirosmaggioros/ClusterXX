@@ -57,8 +57,8 @@ void clusterxx::DBSCAN<Algorithm>::__fit(const arma::mat &X) {
 
 template <class Algorithm>
 clusterxx::DBSCAN<Algorithm>::DBSCAN(const double eps,
-                                     const unsigned int min_samples,
-                                     const unsigned int leaf_size)
+                                     const uint16_t min_samples,
+                                     const uint16_t leaf_size)
     : __eps(eps), __min_samples(min_samples), __leaf_size(leaf_size) {
     assert(eps > 0.0);
     assert(min_samples > 0);
