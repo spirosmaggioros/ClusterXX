@@ -54,7 +54,7 @@ class kd_tree {
     unsigned int __leaf_size;
 
   public:
-    kd_tree(const arma::mat &X, const unsigned int leaf_size = 40);
+    kd_tree(const arma::mat &X, const uint16_t leaf_size = 40);
     std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
                                                            const int &k = 1);
     std::pair<std::vector<int>, std::vector<double>>
