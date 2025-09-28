@@ -9,6 +9,7 @@
 #include "clusterxx/data_structures/graph/graph.hpp"
 
 // cluster
+#include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
 #include "clusterxx/methods/kmeans/kmeans.hpp"
 #include "clusterxx/methods/mbkmeans/mbkmeans.hpp"
 #include "clusterxx/methods/dbscan/dbscan.hpp"
