@@ -141,7 +141,7 @@ int clusterxx::kd_tree<Metric, PairwiseMetric>::__depth(
 }
 
 template <typename Metric, typename PairwiseMetric>
-clusterxx::kd_tree<Metric, PairwiseMetric>::kd_tree(const arma::mat &X, const unsigned int leaf_size)
+clusterxx::kd_tree<Metric, PairwiseMetric>::kd_tree(const arma::mat &X, const uint16_t leaf_size)
     : __leaf_size(leaf_size) {
         assert(!X.empty());
         assert(leaf_size > 0);

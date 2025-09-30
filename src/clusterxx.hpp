@@ -21,5 +21,7 @@
 // decomposition
 #include "clusterxx/methods/pca/pca.hpp"
 
+// csv parsing
+#include "clusterxx/reading/csv_parser.hpp"
 
 #endif
