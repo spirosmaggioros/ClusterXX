@@ -8,16 +8,17 @@
 namespace clusterxx {
 class Plot {
   private:
-      void scatter_plot();
-  public:
-      Plot() = default;
-      ~Plot() = default;
+    void scatter_plot();
 
-      void plot(const cluster_method &m);
-      void plot(const decomposition_method &m);
-      void plot(const manifold_method &m);
+  public:
+    Plot() = default;
+    ~Plot() = default;
+
+    void plot(const cluster_method &m);
+    void plot(const decomposition_method &m);
+    void plot(const manifold_method &m);
 };
-}
+} // namespace clusterxx
 
 #include "visualization_impl.hpp"
 

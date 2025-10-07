@@ -3,7 +3,6 @@
 
 #include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
 #include "clusterxx/writing/write_json.hpp"
-#include "clusterxx/writing/write_json.hpp"
 
 #include "kmeans.hpp"
 #include <assert.h>
@@ -109,6 +108,7 @@ std::vector<int> clusterxx::KMeans<Metric>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
     return __labels;
 }
@@ -126,22 +126,10 @@ std::vector<int> clusterxx::KMeans<Metric>::predict(const arma::mat &X) {
 }
 
 template <typename Metric>
-std::vector<int> clusterxx::KMeans<Metric>::get_labels() const {
-    assert(!__labels.empty());
-    assert(!__centroids.empty());
-    return __labels;
-}
-
-template <typename Metric>
 arma::mat clusterxx::KMeans<Metric>::get_centroids() const {
     assert(!__labels.empty());
     assert(!__centroids.empty());
     return __centroids;
-}
-
-template <typename Metric>
-void clusterxx::KMeans<Metric>::save_to_json(const std::string &filename) const {
-    clusterxx::save_to_json_clustering(__in_features, __labels, filename);
 }
 
 #endif
