@@ -7,6 +7,8 @@ def run_clustering(args: Any) -> None:
     labels: list = []
     with open(args.filename, 'r') as f:
         data = json.load(f)
+        print(type(data['features']))
+        print(len(data['features']))
         features = data['features']
         labels = data['labels']
 

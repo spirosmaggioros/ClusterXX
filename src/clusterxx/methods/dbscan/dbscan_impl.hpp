@@ -77,6 +77,7 @@ template <class Algorithm>
 std::vector<int> clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
     return __labels;
 }
