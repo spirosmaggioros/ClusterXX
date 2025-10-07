@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace clusterxx {
-void save_to_json_clustering(const arma::mat &X, const std::string &filename,
+void save_to_json(const arma::mat &X, const std::string &filename,
                              const std::vector<int> &labels = {}) {
     nlohmann::json j;
     j["features"] = clusterxx::mat2d_to_vec2d(X);

@@ -11,7 +11,7 @@
 namespace clusterxx {
 template <typename Metric =
               clusterxx::pairwise_distances::squared_euclidean_distances>
-class TSNE : clusterxx::manifold_method {
+class TSNE : public clusterxx::manifold_method {
   private:
     const uint16_t __n_components;
     double __perplexity;
@@ -29,9 +29,6 @@ class TSNE : clusterxx::manifold_method {
         arma::mat low_dim_features;
         arma::mat pairwise_dists;
     };
-
-    std::pair<size_t, size_t> __shape;
-    arma::mat __latent_features;
 
     void __fit(const arma::mat &X);
     double __compute_beta(const arma::mat &distances, double target_perplexity,
@@ -53,8 +50,6 @@ class TSNE : clusterxx::manifold_method {
 
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;
-    std::pair<int, int> get_shape() const;
-    arma::mat get_features() const;
 };
 } // namespace clusterxx
 

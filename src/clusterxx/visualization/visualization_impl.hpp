@@ -37,7 +37,7 @@ void clusterxx::Plot::plot2d(const T &m, const std::string &title,
                              const std::vector<int> &labels) {
     std::cout << typeid(T).name() << '\n';
     std::string tmp_file =
-        clusterxx::save_to_tmp_json(m.get_in_features(), labels);
+        clusterxx::save_to_tmp_json(m.get_out_features(), labels);
     std::string cmd =
         "python3 -m clusterxx_visualization scatterplot --filename " +
         tmp_file + " --title " + title + " --xlabel " + xlabel + " --ylabel " +
@@ -55,7 +55,7 @@ void clusterxx::Plot::plot3d(const T &m, const std::string &title,
                              const std::string &zlabel,
                              const std::vector<int> &labels) {
     std::string tmp_file =
-        clusterxx::save_to_tmp_json(m.get_in_features(), labels);
+        clusterxx::save_to_tmp_json(m.get_out_features(), labels);
     std::string cmd =
         "python3 -m clusterxx_visualization scatterplot --filename " +
         tmp_file + " --title " + title + " --xlabel " + xlabel + " --ylabel " +

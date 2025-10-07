@@ -26,7 +26,7 @@ class cluster_method {
     arma::mat get_in_features() const { return __in_features; }
     std::vector<int> get_labels() const { return __labels; }
     void save_to_json(const std::string &filename) {
-        clusterxx::save_to_json_clustering(__in_features, filename, __labels);
+        clusterxx::save_to_json(__in_features, filename, __labels);
     }
 };
 } // namespace clusterxx

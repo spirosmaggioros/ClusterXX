@@ -172,7 +172,7 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         Y += Y_inc;
     }
 
-    __latent_features = Y;
+    __out_features = Y;
     __shape.first = Y.n_rows;
     __shape.second = __n_components;
 }
@@ -206,21 +206,8 @@ void clusterxx::TSNE<Metric>::fit(const arma::mat &X) {
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::fit_transform(const arma::mat &X) {
     __fit(X);
-    return __latent_features;
+    return __out_features;
 }
 
-template <typename Metric>
-std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() const {
-    assert(!__latent_features
-                .empty()); // make sure to call fit/fit_transform first
-    return __shape;
-}
-
-template <typename Metric>
-arma::mat clusterxx::TSNE<Metric>::get_features() const {
-    assert(!__latent_features
-                .empty()); // make sure to call fit/fit_transform first
-    return __latent_features;
-}
 
 #endif

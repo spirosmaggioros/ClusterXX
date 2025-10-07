@@ -7,15 +7,12 @@
 
 namespace clusterxx {
 template <class NeighAlgorithm = clusterxx::kd_tree<>>
-class isomap : clusterxx::manifold_method {
+class isomap : public clusterxx::manifold_method {
   private:
     const uint16_t __n_neighbors;
     const double __radius;
     const uint16_t __n_components;
     const std::string __path_method;
-    arma::mat __latent_features;
-    std::pair<size_t, size_t> __shape;
-    // just for now, no copy constructor
     std::unique_ptr<NeighAlgorithm> __neigh_algorithm;
 
     void __fit(const arma::mat &X);
@@ -27,8 +24,6 @@ class isomap : clusterxx::manifold_method {
     ~isomap() {}
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;
-    std::pair<size_t, size_t> get_shape() const;
-    arma::mat get_features() const;
 };
 } // namespace clusterxx
 

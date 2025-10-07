@@ -19,7 +19,7 @@ class Plot {
     ~Plot() = default;
 
     template <Cluster T>
-    void plot2d(const T &m, const std::string &title = "Clustering_Sesults",
+    void plot2d(const T &m, const std::string &title = "Clustering_Results",
                 const std::string &xlabel = "X",
                 const std::string &ylabel = "Y");
 
@@ -30,7 +30,7 @@ class Plot {
                 const std::vector<int> &labels = {});
 
     template <Cluster T>
-    void plot3d(const T &m, const std::string &title = "Clustering_Sesults",
+    void plot3d(const T &m, const std::string &title = "Clustering_Results",
                 const std::string &xlabel = "X",
                 const std::string &ylabel = "Y",
                 const std::string &zlabel = "Z");
