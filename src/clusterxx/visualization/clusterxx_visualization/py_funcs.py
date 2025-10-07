@@ -15,7 +15,6 @@ def run_clustering(args: Any) -> None:
     assert len(features[0]) in [2, 3], "Please provide 2D or 3D features"
 
     if len(features[0]) == 2:
-        print(labels)
         plt.scatter([x[0] for x in features], [x[1] for x in features], c=labels)
         plt.xlabel(args.xlabel)
         plt.ylabel(args.ylabel)

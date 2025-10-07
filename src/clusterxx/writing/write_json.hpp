@@ -11,7 +11,7 @@
 
 namespace clusterxx {
 void save_to_json_clustering(const arma::mat &X, const std::string &filename,
-        const std::vector<int> &labels = {}) {
+                             const std::vector<int> &labels = {}) {
     nlohmann::json j;
     j["features"] = clusterxx::mat2d_to_vec2d(X);
     if (!labels.empty()) {
@@ -21,7 +21,8 @@ void save_to_json_clustering(const arma::mat &X, const std::string &filename,
     out_file << j.dump(4);
 }
 
-std::string save_to_tmp_json(const arma::mat &X, const std::vector<int> &labels = {}) {
+std::string save_to_tmp_json(const arma::mat &X,
+                             const std::vector<int> &labels = {}) {
     nlohmann::json j;
     j["features"] = clusterxx::mat2d_to_vec2d(X);
     if (!labels.empty()) {
