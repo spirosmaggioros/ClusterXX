@@ -2,8 +2,10 @@
 #define CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 
 #include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
+#include "clusterxx/writing/write_json.hpp"
+#include "clusterxx/writing/write_json.hpp"
+
 #include "kmeans.hpp"
-#include <algorithm>
 #include <assert.h>
 #include <ranges>
 
@@ -98,6 +100,7 @@ void clusterxx::KMeans<Metric>::fit(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
 }
 
@@ -134,6 +137,11 @@ arma::mat clusterxx::KMeans<Metric>::get_centroids() const {
     assert(!__labels.empty());
     assert(!__centroids.empty());
     return __centroids;
+}
+
+template <typename Metric>
+void clusterxx::KMeans<Metric>::save_to_json(const std::string &filename) const {
+    clusterxx::save_to_json_clustering(__in_features, __labels, filename);
 }
 
 #endif

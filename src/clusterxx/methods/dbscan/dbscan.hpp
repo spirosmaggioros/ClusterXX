@@ -3,6 +3,7 @@
 
 #include "clusterxx/base/cluster_method.hpp"
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
+
 #include <armadillo>
 #include <assert.h>
 #include <memory>
@@ -10,15 +11,13 @@
 
 namespace clusterxx {
 template <class Algorithm = clusterxx::kd_tree<>>
-class DBSCAN : cluster_method {
+class DBSCAN : public cluster_method {
   private:
-    // just for now, no copy constructor
     std::unique_ptr<Algorithm> __algorithm;
     double __eps;
     const uint16_t __min_samples;
     const uint16_t __leaf_size;
     std::unordered_map<int, int> __assignments;
-    std::vector<int> __labels;
 
     void __fit(const arma::mat &X);
 
@@ -30,7 +29,6 @@ class DBSCAN : cluster_method {
     void fit(const arma::mat &X) override;
     std::vector<int> fit_predict(const arma::mat &X) override;
     std::vector<int> predict(const arma::mat &X) override;
-    std::vector<int> get_labels() const;
 };
 } // namespace clusterxx
 

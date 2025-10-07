@@ -24,4 +24,6 @@
 // csv parsing
 #include "clusterxx/reading/csv_parser.hpp"
 
+// visualization
+#include "clusterxx/visualization/visualization.hpp"
 #endif

@@ -69,6 +69,7 @@ template <class Algorithm>
 void clusterxx::DBSCAN<Algorithm>::fit(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
 }
 
@@ -87,13 +88,6 @@ std::vector<int> clusterxx::DBSCAN<Algorithm>::predict(const arma::mat &X) {
               << '\n';
     // Not implemented
     return {};
-}
-
-template <class Algorithm>
-std::vector<int> clusterxx::DBSCAN<Algorithm>::get_labels() const {
-    assert(!__assignments.empty());
-    assert(!__labels.empty());
-    return __labels;
 }
 
 #endif

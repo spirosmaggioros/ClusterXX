@@ -2,6 +2,8 @@
 #define CLUSTERXX_METHODS_MBKMEANS_IMPL_HPP
 
 #include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
+#include "clusterxx/writing/write_json.hpp"
+
 #include "mbkmeans.hpp"
 
 template <typename Metric>
@@ -130,6 +132,11 @@ arma::mat clusterxx::MiniBatchKMeans<Metric>::get_centroids() const {
     assert(!__labels.empty());
     assert(!__centroids.empty());
     return __centroids;
+}
+
+template <typename Metric>
+void clusterxx::MiniBatchKMeans<Metric>::save_to_json(const std::string &filename) const {
+    clusterxx::save_to_json_clustering(__in_features, __labels, filename);
 }
 
 #endif

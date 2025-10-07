@@ -8,12 +8,11 @@
 
 namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
-class MiniBatchKMeans : cluster_method {
+class MiniBatchKMeans : public cluster_method {
   private:
     Metric metric;
     std::unordered_map<int, std::vector<int>> __assignments;
     arma::mat __centroids;
-    std::vector<int> __labels;
     std::vector<int> __center_counts;
 
     const uint16_t __n_clusters;
@@ -41,6 +40,7 @@ class MiniBatchKMeans : cluster_method {
     std::vector<int> predict(const arma::mat &X) override;
     std::vector<int> get_labels() const;
     arma::mat get_centroids() const;
+    void save_to_json(const std::string &filename) const;
 };
 } // namespace clusterxx
 

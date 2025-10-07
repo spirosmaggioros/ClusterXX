@@ -12,12 +12,11 @@
 
 namespace clusterxx {
 template <typename Metric = clusterxx::pairwise_distances::euclidean_distances>
-class KMeans : cluster_method {
+class KMeans : public cluster_method {
   private:
     Metric metric;
     std::unordered_map<int, std::vector<int>> __assignments;
     arma::mat __centroids;
-    std::vector<int> __labels;
 
     const uint16_t __n_clusters;
     const uint32_t __max_iter;
@@ -42,6 +41,7 @@ class KMeans : cluster_method {
     std::vector<int> predict(const arma::mat &X) override;
     std::vector<int> get_labels() const;
     arma::mat get_centroids() const;
+    void save_to_json(const std::string &filename) const;
 };
 } // namespace clusterxx
 
