@@ -1,7 +1,9 @@
 #ifndef CLUSTERXX_METHODS_TSNE_IMPL_HPP
 #define CLUSTERXX_METHODS_TSNE_IMPL_HPP
 
+#include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
 #include "tsne.hpp"
+
 #include <float.h>
 #include <random>
 
@@ -53,27 +55,92 @@ double clusterxx::TSNE<Metric>::__compute_beta(const arma::mat &distances,
 
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
-    const arma::mat &features, double perplexity) {
-    arma::mat p_ji(features.n_rows, features.n_rows);
-    arma::mat pairwise_dists = metric(features, arma::mat());
-    for (size_t i = 0; i < features.n_rows; i++) {
-        double beta = __compute_beta(pairwise_dists, perplexity, i);
+    const arma::mat &features) {
+    arma::mat p_ji;
+    arma::mat pairwise_dists;
+    if (__method == "exact") {
+        p_ji.resize(features.n_rows, features.n_rows);
+        pairwise_dists = metric(features);
+        for (size_t i = 0; i < features.n_rows; i++) {
+            double beta = __compute_beta(pairwise_dists, __perplexity, i);
 
-        double sum = 0.0;
-        for (size_t j = 0; j < features.n_rows; j++) {
-            if (i == j) [[unlikely]] {
-                p_ji(i, j) = 0.0;
-            } else {
-                p_ji(i, j) = std::exp(-beta * pairwise_dists(i, j));
-                sum += p_ji(i, j);
+            double sum = 0.0;
+            for (size_t j = 0; j < features.n_rows; j++) {
+                if (i == j) [[unlikely]] {
+                    p_ji(i, j) = 0.0;
+                } else {
+                    p_ji(i, j) = std::exp(-beta * pairwise_dists(i, j));
+                    sum += p_ji(i, j);
+                }
+            }
+            if (sum > 0) {
+                p_ji.row(i) /= sum;
             }
         }
-        if (sum > 0) {
-            p_ji.row(i) /= sum;
+    } else { // barnes_hut
+        int u = std::ceil(3 * __perplexity);
+        if (u > features.n_rows) {
+            p_ji.resize(features.n_rows, features.n_rows);
+        } else {
+            p_ji.resize(features.n_rows, std::ceil(3 * __perplexity));
+        }
+        kd_tree<> _kd_tree = kd_tree<>(features);
+        for (size_t i = 0; i < features.n_rows; i++) {
+            auto [inds, dists] = _kd_tree.query(features.row(i).t(), u);
+            arma::mat pairwise_dists(dists);
+            pairwise_dists = pairwise_dists.t();
+
+            double beta = __compute_beta(pairwise_dists, __perplexity, 0);
+
+            double sum = 0.0;
+            for (size_t j = 0; j < p_ji.n_cols; j++) {
+                p_ji(i, j) = std::exp(-beta * pairwise_dists(0, j));
+                sum += p_ji(i, j);
+            }
+            if (sum > 0) {
+                p_ji.row(i) /= sum;
+            }
         }
     }
 
     return p_ji;
+}
+
+template <typename Metric>
+arma::mat clusterxx::TSNE<Metric>::__symmetrize_sparse_affinities(
+    const arma::mat &p_ji_sparse) {
+    int u = std::ceil(3 * __perplexity);
+    std::map<std::pair<int, int>, double> sparse_map;
+    kd_tree<> _kd_tree = kd_tree<>(__features);
+    for (int i = 0; i < __features.n_rows; i++) {
+        auto [inds, dists] = _kd_tree.query(__features.row(i).t(), u);
+
+        for (int k = 0; k < std::min(u, (int)inds.size()); k++) {
+            int j = inds[k];
+            if (i != j) {
+                sparse_map[{i, j}] = p_ji_sparse(i, k);
+            }
+        }
+    }
+
+    arma::mat p_ij_symm;
+    p_ij_symm.zeros(__features.n_rows, u);
+
+    for (size_t i = 0; i < __features.n_rows; i++) {
+        auto [inds, dists] = _kd_tree.query(__features.row(i).t(), u);
+
+        for (int k = 0; k < std::min(u, (int)inds.size()); k++) {
+            int j = inds[k];
+            if (i != j) {
+                double p_ij = sparse_map.count({i, j}) ? sparse_map[{i, j}] : 0;
+                double p_ji = sparse_map.count({j, i}) ? sparse_map[{j, i}] : 0;
+
+                p_ij_symm(i, k) = (p_ij + p_ji) / (2.0 * __features.n_rows);
+            }
+        }
+    }
+
+    return p_ij_symm;
 }
 
 template <typename Metric>
@@ -110,9 +177,15 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     assert(__n_components < X.n_cols);
     assert(__perplexity < X.n_rows);
 
+    __features = X;
     // compute pairwise affinities
-    arma::mat p_ji = __compute_pairwise_affinities(X, __perplexity);
-    arma::mat symmetrized = (p_ji + p_ji.t()) / (2.0 * X.n_rows);
+    arma::mat p_ji = __compute_pairwise_affinities(X);
+    arma::mat symmetrized;
+    if (__method == "exact") {
+        symmetrized = (p_ji + p_ji.t()) / (2.0 * X.n_rows);
+    } else {
+        symmetrized = __symmetrize_sparse_affinities(p_ji);
+    }
 
     // sample initial solution from N(0, 1e-4)
     std::random_device rd;
@@ -141,8 +214,10 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 
         // compute low dimensional affinities(q_ij)
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
-        g_data.low_dim_affinities = q_ij;
-        g_data.pairwise_dists = sol_pairwise_dists;
+        __gradient_data g_data = {.pairwise_affinities = symmetrized,
+                                  .low_dim_affinities = q_ij,
+                                  .low_dim_features = Y,
+                                  .pairwise_dists = sol_pairwise_dists};
 
         // compute gradient
         arma::mat gradients = __kullback_leibler_gradient(g_data);
@@ -178,17 +253,15 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 }
 
 template <typename Metric>
-clusterxx::TSNE<Metric>::TSNE(const uint16_t n_components,
-                              const double perplexity,
-                              const double learning_rate,
-                              const double early_exaggeration,
-                              const uint32_t max_iter,
-                              const double min_grad_norm,
-                              const uint32_t n_iter_without_progress)
+clusterxx::TSNE<Metric>::TSNE(
+    const uint16_t n_components, const double perplexity,
+    const double learning_rate, const double early_exaggeration,
+    const uint32_t max_iter, const double min_grad_norm,
+    const uint32_t n_iter_without_progress, const std::string method)
     : __n_components(n_components), __perplexity(perplexity),
       __learning_rate(learning_rate), __early_exaggeration(early_exaggeration),
       __max_iter(max_iter), __min_grad_norm(min_grad_norm),
-      __n_iter_without_progress(n_iter_without_progress) {
+      __n_iter_without_progress(n_iter_without_progress), __method(method) {
     assert(n_components > 0);
     assert(perplexity > 0);
     assert(learning_rate > 0.0);
@@ -196,6 +269,7 @@ clusterxx::TSNE<Metric>::TSNE(const uint16_t n_components,
     assert(max_iter >= 20);
     assert(min_grad_norm > 0.0);
     assert(n_iter_without_progress > 0);
+    assert(method == "barnes_hut" || method == "exact");
 }
 
 template <typename Metric>
@@ -208,6 +282,5 @@ arma::mat clusterxx::TSNE<Metric>::fit_transform(const arma::mat &X) {
     __fit(X);
     return __out_features;
 }
-
 
 #endif
