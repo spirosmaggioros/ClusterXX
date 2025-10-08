@@ -24,6 +24,8 @@ class TSNE : public clusterxx::manifold_method {
     const std::string __method;
     Metric metric;
 
+    arma::mat __features;
+
     struct __gradient_data {
         arma::mat pairwise_affinities;
         arma::mat low_dim_affinities;
@@ -46,23 +48,8 @@ class TSNE : public clusterxx::manifold_method {
          const double learning_rate = 200.0,
          const double early_exaggeration = 12.0, const uint32_t max_iter = 1000,
          const double min_grad_norm = 1e-7,
-         const unsigned int n_iter_without_progress = 300,
-         const std::string method = "barnes_hut")
-        : __n_components(n_components), __perplexity(perplexity),
-          __learning_rate(learning_rate),
-          __early_exaggeration(early_exaggeration), __max_iter(max_iter),
-          __min_grad_norm(min_grad_norm),
-          __n_iter_without_progress(n_iter_without_progress),
-          __method(method) {
-        assert(n_components > 0);
-        assert(perplexity > 0);
-        assert(learning_rate > 0.0);
-        assert(early_exaggeration >= 1.0);
-        assert(max_iter >= 20);
-        assert(min_grad_norm > 0.0);
-        assert(n_iter_without_progress > 0);
-        assert(method == "barnes_hut" || method == "exact");
-    }
+         const uint32_t n_iter_without_progress = 300,
+         const std::string method = "barnes_hut");
     ~TSNE() {}
 
     void fit(const arma::mat &X) override;
