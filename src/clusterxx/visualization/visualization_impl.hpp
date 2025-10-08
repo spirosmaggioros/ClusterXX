@@ -35,7 +35,6 @@ void clusterxx::Plot::plot2d(const T &m, const std::string &title,
                              const std::string &xlabel,
                              const std::string &ylabel,
                              const std::vector<int> &labels) {
-    std::cout << typeid(T).name() << '\n';
     std::string tmp_file =
         clusterxx::save_to_tmp_json(m.get_out_features(), labels);
     std::string cmd =

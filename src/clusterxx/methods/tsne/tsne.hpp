@@ -42,7 +42,7 @@ class TSNE : public clusterxx::manifold_method {
 
   public:
     TSNE(const uint16_t n_components = 2, const double perplexity = 30.0,
-         const double learning_rate = 200,
+         const double learning_rate = 200.0,
          const double early_exaggeration = 12.0, const uint32_t max_iter = 1000,
          const double min_grad_norm = 1e-7,
          const uint32_t n_iter_without_progress = 300);
