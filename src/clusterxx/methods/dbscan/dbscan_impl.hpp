@@ -3,8 +3,8 @@
 
 #include "dbscan.hpp"
 
-template <typename Metric, class Algorithm>
-void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
+template <class Algorithm>
+void clusterxx::DBSCAN<Algorithm>::__fit(const arma::mat &X) {
     assert(!X.empty());
     __algorithm = std::make_unique<Algorithm>(X, __leaf_size);
     int cluster_id = 0;
@@ -55,37 +55,40 @@ void clusterxx::DBSCAN<Metric, Algorithm>::__fit(const arma::mat &X) {
     }
 }
 
-template <typename Metric, class Algorithm>
-void clusterxx::DBSCAN<Metric, Algorithm>::fit(const arma::mat &X) {
+template <class Algorithm>
+clusterxx::DBSCAN<Algorithm>::DBSCAN(const double eps,
+                                     const uint16_t min_samples,
+                                     const uint16_t leaf_size)
+    : __eps(eps), __min_samples(min_samples), __leaf_size(leaf_size) {
+    assert(eps > 0.0);
+    assert(min_samples > 0);
+    assert(leaf_size > 0);
+}
+
+template <class Algorithm>
+void clusterxx::DBSCAN<Algorithm>::fit(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
 }
 
-template <typename Metric, class Algorithm>
-std::vector<int>
-clusterxx::DBSCAN<Metric, Algorithm>::fit_predict(const arma::mat &X) {
+template <class Algorithm>
+std::vector<int> clusterxx::DBSCAN<Algorithm>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
     return __labels;
 }
 
-template <typename Metric, class Algorithm>
-std::vector<int>
-clusterxx::DBSCAN<Metric, Algorithm>::predict(const arma::mat &X) {
+template <class Algorithm>
+std::vector<int> clusterxx::DBSCAN<Algorithm>::predict(const arma::mat &X) {
     std::cout << "[WARNING] predict() function is not implemented for this "
                  "class. Use fit_predict() instead"
               << '\n';
     // Not implemented
     return {};
-}
-
-template <typename Metric, class Algorithm>
-std::vector<int> clusterxx::DBSCAN<Metric, Algorithm>::get_labels() const {
-    assert(!__assignments.empty());
-    assert(!__labels.empty());
-    return __labels;
 }
 
 #endif

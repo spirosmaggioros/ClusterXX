@@ -1,10 +1,23 @@
 #ifndef CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 #define CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 
+#include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
+#include "clusterxx/writing/write_json.hpp"
+
 #include "kmeans.hpp"
-#include <algorithm>
 #include <assert.h>
 #include <ranges>
+
+template <typename Metric>
+clusterxx::KMeans<Metric>::KMeans(const uint16_t n_clusters,
+                                  const uint32_t max_iter, std::string init,
+                                  std::optional<int> random_state)
+    : __n_clusters(n_clusters), __max_iter(max_iter), __init(init),
+      __random_state(random_state) {
+    assert(max_iter > 0);
+    assert(n_clusters > 0);
+    assert(init == "k-means++" || init == "random");
+}
 
 template <typename Metric> void clusterxx::KMeans<Metric>::__init_centroids() {
     if (__init == "random") {
@@ -21,31 +34,10 @@ template <typename Metric> void clusterxx::KMeans<Metric>::__init_centroids() {
             __centroids.row(i) = shuffled.row(i);
         }
     } else { // k-means++
-        __centroids.resize(1, __features.n_cols);
-        int _rand = rand() % (__features.n_rows - 1);
-        int _curr_centroid_idx = 0;
-        __centroids.row(_curr_centroid_idx++) = __features.row(_rand);
-        clusterxx::pairwise_distances::squared_euclidean_distances
-            squared_eucl_dist;
-        while (__centroids.n_rows < __n_clusters) {
-            arma::mat pairwise_dist =
-                squared_eucl_dist(__features, __centroids);
-            std::vector<double> probs;
-            double probs_sum = 0.0;
-            for (size_t i = 0; i < pairwise_dist.n_rows; i++) {
-                auto min_element = pairwise_dist.row(i).min();
-                probs.push_back(min_element);
-                probs_sum += min_element;
-            }
-
-            auto dist_compare = [&probs_sum](double a, double b) {
-                return (a / probs_sum) < (b / probs_sum);
-            };
-            auto max_prob = std::ranges::max_element(probs, dist_compare);
-            int selected = std::ranges::distance(probs.begin(), max_prob);
-            __centroids.insert_rows(__centroids.n_rows - 1, 1);
-            __centroids.row(_curr_centroid_idx++) = __features.row(selected);
-        }
+        clusterxx::kmeans_plus_plus centroids_init =
+            clusterxx::kmeans_plus_plus(__n_clusters);
+        centroids_init.fit(__features);
+        __centroids = centroids_init.get_centroids();
     }
 }
 
@@ -107,6 +99,7 @@ void clusterxx::KMeans<Metric>::fit(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
 }
 
@@ -115,6 +108,7 @@ std::vector<int> clusterxx::KMeans<Metric>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
     return __labels;
 }
@@ -128,13 +122,6 @@ std::vector<int> clusterxx::KMeans<Metric>::predict(const arma::mat &X) {
     __labels.clear();
     __labels.resize(X.size());
     __assign_labels(X);
-    return __labels;
-}
-
-template <typename Metric>
-std::vector<int> clusterxx::KMeans<Metric>::get_labels() const {
-    assert(!__labels.empty());
-    assert(!__centroids.empty());
     return __labels;
 }
 

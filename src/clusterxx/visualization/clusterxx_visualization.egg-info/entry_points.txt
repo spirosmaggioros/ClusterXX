@@ -1,0 +1,2 @@
+[console_scripts]
+clusterxx_visualization = clusterxx_visualization.__main__:main

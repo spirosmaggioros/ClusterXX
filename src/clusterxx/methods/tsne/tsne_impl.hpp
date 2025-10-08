@@ -1,6 +1,5 @@
 #ifndef CLUSTERXX_METHODS_TSNE_IMPL_HPP
 #define CLUSTERXX_METHODS_TSNE_IMPL_HPP
-#define ARMA_USE_BLAS
 
 #include "tsne.hpp"
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
@@ -157,17 +156,17 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
 
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
-    const arma::mat &pairwise_affinities, const arma::mat &low_dim_affinities,
-    const arma::mat &low_dim_features, const arma::mat &pairwise_dists) {
-    assert(pairwise_affinities.n_rows == low_dim_affinities.n_rows);
-    assert(pairwise_affinities.n_cols == low_dim_affinities.n_cols);
+    const __gradient_data &data) {
+    assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
+    assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
 
-    arma::mat F =
-        4.0 * (__early_exaggeration * pairwise_affinities - low_dim_affinities);
-    F /= (1.0 + pairwise_dists);
+    arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
+                         data.low_dim_affinities);
+    F /= (1.0 + data.pairwise_dists);
     F.diag().zeros();
-    arma::mat gradient = arma::diagmat(arma::sum(F, 1)) * low_dim_features -
-                         F * low_dim_features;
+    arma::mat gradient =
+        arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
+        F * data.low_dim_features;
     return gradient;
 }
 
@@ -200,10 +199,12 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             Y(i, j) = dist(gen);
         }
     }
+    __gradient_data g_data = {.pairwise_affinities = symmetrized,
+                              .low_dim_features = Y};
 
     arma::mat Y_inc = arma::zeros<arma::mat>(Y.n_rows, Y.n_cols);
     double best_loss = std::numeric_limits<double>::infinity();
-    int n_iter_no_progress = 0;
+    uint32_t n_iter_no_progress = 0;
     for (int i = 0; i < __max_iter; i++) {
         std::cout << " Im at iter: " << i << '\n';
         if (i == static_cast<int>(0.25 * __max_iter)) [[unlikely]] {
@@ -215,10 +216,11 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 
         // compute low dimensional affinities(q_ij)
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
+        g_data.low_dim_affinities = q_ij;
+        g_data.pairwise_dists = sol_pairwise_dists;
 
         // compute gradient
-        arma::mat gradients = __kullback_leibler_gradient(symmetrized, q_ij, Y,
-                                                          sol_pairwise_dists);
+        arma::mat gradients = __kullback_leibler_gradient(g_data);
         double grad_norm = arma::norm(gradients, "fro");
         if (grad_norm < __min_grad_norm) {
             break;
@@ -245,9 +247,30 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
         Y += Y_inc;
     }
 
-    __reduced_features = Y;
+    __out_features = Y;
     __shape.first = Y.n_rows;
     __shape.second = __n_components;
+}
+
+template <typename Metric>
+clusterxx::TSNE<Metric>::TSNE(const uint16_t n_components,
+                              const double perplexity,
+                              const double learning_rate,
+                              const double early_exaggeration,
+                              const uint32_t max_iter,
+                              const double min_grad_norm,
+                              const uint32_t n_iter_without_progress)
+    : __n_components(n_components), __perplexity(perplexity),
+      __learning_rate(learning_rate), __early_exaggeration(early_exaggeration),
+      __max_iter(max_iter), __min_grad_norm(min_grad_norm),
+      __n_iter_without_progress(n_iter_without_progress) {
+    assert(n_components > 0);
+    assert(perplexity > 0);
+    assert(learning_rate > 0.0);
+    assert(early_exaggeration >= 1.0);
+    assert(max_iter >= 20);
+    assert(min_grad_norm > 0.0);
+    assert(n_iter_without_progress > 0);
 }
 
 template <typename Metric>
@@ -258,17 +281,7 @@ void clusterxx::TSNE<Metric>::fit(const arma::mat &X) {
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::fit_transform(const arma::mat &X) {
     __fit(X);
-    return __reduced_features;
-}
-
-template <typename Metric>
-std::pair<int, int> clusterxx::TSNE<Metric>::get_shape() const {
-    return __shape;
-}
-
-template <typename Metric>
-arma::mat clusterxx::TSNE<Metric>::get_features() const {
-    return __reduced_features;
+    return __out_features;
 }
 
 #endif

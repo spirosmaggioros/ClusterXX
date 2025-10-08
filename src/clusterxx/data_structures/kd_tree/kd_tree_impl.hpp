@@ -50,7 +50,6 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__k_nearest_neighbors(
     if (!node) {
         return;
     }
-    assert(X.n_cols == node->__feature_size);
 
     int axis = depth % X.n_rows;
     double dist = metric(X, node->__point);
@@ -97,7 +96,6 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
     if (!node) {
         return;
     }
-    assert(X.n_cols == node->__feature_size);
 
     int axis = depth % X.n_rows;
     double dist = metric(X, node->__point);
@@ -140,6 +138,19 @@ int clusterxx::kd_tree<Metric, PairwiseMetric>::__depth(
         return 0;
     }
     return 1 + std::max(__depth(root->left), __depth(root->right));
+}
+
+template <typename Metric, typename PairwiseMetric>
+clusterxx::kd_tree<Metric, PairwiseMetric>::kd_tree(const arma::mat &X, const uint16_t leaf_size)
+    : __leaf_size(leaf_size) {
+        assert(!X.empty());
+        assert(leaf_size > 0);
+        assert(metric.p() > 0 && metric.p() <= 2);
+        std::vector<size_t> indices(X.n_rows);
+        std::iota(indices.begin(), indices.end(), 0);
+        __root = __initialize(X, indices);
+        // assert(depth() <= std::log2(std::max(1, (int(X.n_rows) - 1) /
+        // __leaf_size)));
 }
 
 template <typename Metric, typename PairwiseMetric>

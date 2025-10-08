@@ -1,7 +1,6 @@
-sources = []
 clusterxx_inc = include_directories('.')
 
-armadillo_dep = dependency('armadillo', required: false)
+armadillo_dep = dependency('armadillo', required: true)
 
 if not armadillo_dep.found()
   armadillo_inc = include_directories('../extern/armadillo/include')

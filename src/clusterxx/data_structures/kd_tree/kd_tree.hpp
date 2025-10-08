@@ -21,10 +21,9 @@ class kd_tree {
         arma::mat __extra_points;
         std::vector<int> __extra_points_inds;
         size_t __ind;
-        int __feature_size;
 
         kd_node(const arma::vec &point, const size_t ind)
-            : __point(point), __feature_size(__point.n_cols), __ind(ind) {}
+            : __point(point), __ind(ind) {}
     };
 
     struct Compare {
@@ -55,18 +54,7 @@ class kd_tree {
     unsigned int __leaf_size;
 
   public:
-    kd_tree(const arma::mat &X, const unsigned int leaf_size = 40)
-        : __leaf_size(leaf_size) {
-        assert(!X.empty());
-        assert(leaf_size > 0);
-        assert(metric.p() > 0 && metric.p() <= 2);
-        std::vector<size_t> indices(X.n_rows);
-        std::iota(indices.begin(), indices.end(), 0);
-        __root = __initialize(X, indices);
-        // assert(depth() <= std::log2(std::max(1, (int(X.n_rows) - 1) /
-        // __leaf_size)));
-    }
-
+    kd_tree(const arma::mat &X, const uint16_t leaf_size = 40);
     std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
                                                            const int &k = 1);
     std::pair<std::vector<int>, std::vector<double>>

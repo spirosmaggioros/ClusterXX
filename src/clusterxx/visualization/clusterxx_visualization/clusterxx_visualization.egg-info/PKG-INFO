@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: clusterxx_visualization
+Version: 0.0.1
+Summary: ClusterXX visualization helper API
+Home-page: https://github.com/spirosmaggioros/ClusterXX/
+Download-URL: https://github.com/spirosmaggioros/ClusterXX/
+Author: Spiros Maggioros
+Author-email: spirosmag@ieee.org
+Maintainer: Spiros Maggioros
+Maintainer-email: spirosmag@ieee.org
+License: MIT
+Keywords: data visualization
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: matplotlib

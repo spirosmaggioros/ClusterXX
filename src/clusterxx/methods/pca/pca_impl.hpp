@@ -19,7 +19,7 @@ void clusterxx::PCA::__fit(const arma::mat &X) {
     V = V.cols(0, __n_components - 1);
     s = s.rows(0, __n_components - 1);
 
-    __signals = _X * V;
+    __out_features = _X * V;
     __explained_variance = arma::square(s) / (X.n_rows - 1);
 }
 
@@ -31,7 +31,7 @@ void clusterxx::PCA::fit(const arma::mat &X) {
 arma::mat clusterxx::PCA::fit_transform(const arma::mat &X) {
     assert(!X.empty());
     __fit(X);
-    return __signals;
+    return __out_features;
 }
 
 arma::vec clusterxx::PCA::get_explained_variance() const {

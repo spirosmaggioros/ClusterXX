@@ -5,16 +5,15 @@
 #include <assert.h>
 
 namespace clusterxx {
-class PCA : decomposition_method {
+class PCA : public decomposition_method {
   private:
-    unsigned int __n_components;
-    arma::mat __signals;
+    const uint16_t __n_components;
     arma::vec __explained_variance;
 
     void __fit(const arma::mat &X);
 
   public:
-    PCA(const unsigned int n_components) : __n_components(n_components) {}
+    PCA(const uint16_t n_components) : __n_components(n_components) {}
     void fit(const arma::mat &X) override;
     arma::mat fit_transform(const arma::mat &X) override;
     arma::vec get_explained_variance() const;

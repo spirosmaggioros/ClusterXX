@@ -1,6 +1,9 @@
 #ifndef CLUSTERXX_METHODS_MBKMEANS_IMPL_HPP
 #define CLUSTERXX_METHODS_MBKMEANS_IMPL_HPP
 
+#include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
+#include "clusterxx/writing/write_json.hpp"
+
 #include "mbkmeans.hpp"
 
 template <typename Metric>
@@ -19,31 +22,10 @@ void clusterxx::MiniBatchKMeans<Metric>::__init_centroids() {
             __centroids.row(i) = shuffled.row(i);
         }
     } else { // k-means++
-        __centroids.resize(1, __features.n_cols);
-        int _rand = rand() % (__features.n_rows - 1);
-        int _curr_centroid_idx = 0;
-        __centroids.row(_curr_centroid_idx++) = __features.row(_rand);
-        clusterxx::pairwise_distances::squared_euclidean_distances
-            squared_eucl_dist;
-        while (__centroids.n_rows < __n_clusters) {
-            arma::mat pairwise_dist =
-                squared_eucl_dist(__features, __centroids);
-            std::vector<double> probs;
-            double probs_sum = 0.0;
-            for (size_t i = 0; i < pairwise_dist.n_rows; i++) {
-                auto min_element = pairwise_dist.row(i).min();
-                probs.push_back(min_element);
-                probs_sum += min_element;
-            }
-
-            auto dist_compare = [&probs_sum](double a, double b) {
-                return (a / probs_sum) < (b / probs_sum);
-            };
-            auto max_prob = std::ranges::max_element(probs, dist_compare);
-            int selected = std::ranges::distance(probs.begin(), max_prob);
-            __centroids.insert_rows(__centroids.n_rows - 1, 1);
-            __centroids.row(_curr_centroid_idx++) = __features.row(selected);
-        }
+        clusterxx::kmeans_plus_plus centroids_init =
+            clusterxx::kmeans_plus_plus(__n_clusters);
+        centroids_init.fit(__features);
+        __centroids = centroids_init.get_centroids();
     }
 }
 
@@ -99,10 +81,20 @@ void clusterxx::MiniBatchKMeans<Metric>::__fit(const arma::mat &X) {
 }
 
 template <typename Metric>
+clusterxx::MiniBatchKMeans<Metric>::MiniBatchKMeans(
+    const uint16_t n_clusters, const std::string init, const uint32_t max_iter,
+    const uint32_t batch_size, std::optional<int> random_state)
+    : __n_clusters(n_clusters), __init(init), __max_iter(max_iter),
+      __batch_size(batch_size), __random_state(random_state) {
+    assert(init == "k-means++" || init == "random");
+}
+
+template <typename Metric>
 void clusterxx::MiniBatchKMeans<Metric>::fit(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
 }
 
@@ -112,6 +104,7 @@ clusterxx::MiniBatchKMeans<Metric>::fit_predict(const arma::mat &X) {
     __assignments.clear();
     __centroids.clear();
     __labels.clear();
+    __in_features = X;
     __fit(X);
     return __labels;
 }
@@ -126,13 +119,6 @@ clusterxx::MiniBatchKMeans<Metric>::predict(const arma::mat &X) {
     __labels.clear();
     __labels.resize(X.size());
     __assign_labels(X, arma::uvec());
-    return __labels;
-}
-
-template <typename Metric>
-std::vector<int> clusterxx::MiniBatchKMeans<Metric>::get_labels() const {
-    assert(!__labels.empty());
-    assert(!__centroids.empty());
     return __labels;
 }
 

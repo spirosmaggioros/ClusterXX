@@ -1,6 +1,10 @@
 project('clusterxx', 'cpp',
-        version: '0.1',
-        default_options: ['cpp_std=c++23'])
+  version: '0.1',
+  default_options: [
+    'cpp_std=c++23',
+    'optimization=3',
+    'b_lto=true',
+  ])
 
 subdir('src')
 subdir('tests')
@@ -14,4 +18,4 @@ pkg.generate(
   subdirs : '.',   # headers are installed into /usr/local/include
   libraries : libclusterxx,
   version : meson.project_version()
-)
+  )

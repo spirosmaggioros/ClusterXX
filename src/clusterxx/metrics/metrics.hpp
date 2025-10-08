@@ -69,7 +69,7 @@ struct euclidean_distances {
         arma::vec norm_y = arma::sum(arma::square(_Y), 1);
 
         arma::mat dot_prod = X * _Y.t();
-
+        
         return arma::sqrt(arma::repmat(norm_x, 1, _Y.n_rows) +
                           arma::repmat(norm_y.t(), X.n_rows, 1) - 2 * dot_prod);
     }
