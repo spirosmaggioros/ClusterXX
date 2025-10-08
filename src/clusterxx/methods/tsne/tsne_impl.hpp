@@ -1,8 +1,8 @@
 #ifndef CLUSTERXX_METHODS_TSNE_IMPL_HPP
 #define CLUSTERXX_METHODS_TSNE_IMPL_HPP
 
-#include "tsne.hpp"
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
+#include "tsne.hpp"
 
 #include <float.h>
 #include <random>
@@ -107,8 +107,8 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 }
 
 template <typename Metric>
-arma::mat 
-clusterxx::TSNE<Metric>::__symmetrize_sparse_affinities(const arma::mat &p_ji_sparse) {
+arma::mat clusterxx::TSNE<Metric>::__symmetrize_sparse_affinities(
+    const arma::mat &p_ji_sparse) {
     int u = std::ceil(3 * __perplexity);
     std::map<std::pair<int, int>, double> sparse_map;
     kd_tree<> _kd_tree = kd_tree<>(__features);
@@ -214,12 +214,10 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 
         // compute low dimensional affinities(q_ij)
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
-        __gradient_data g_data = {
-            .pairwise_affinities = symmetrized,
-            .low_dim_affinities = q_ij,
-            .low_dim_features = Y,
-            .pairwise_dists = sol_pairwise_dists
-        };
+        __gradient_data g_data = {.pairwise_affinities = symmetrized,
+                                  .low_dim_affinities = q_ij,
+                                  .low_dim_features = Y,
+                                  .pairwise_dists = sol_pairwise_dists};
 
         // compute gradient
         arma::mat gradients = __kullback_leibler_gradient(g_data);
@@ -255,19 +253,15 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
 }
 
 template <typename Metric>
-clusterxx::TSNE<Metric>::TSNE(const uint16_t n_components,
-                              const double perplexity,
-                              const double learning_rate,
-                              const double early_exaggeration,
-                              const uint32_t max_iter,
-                              const double min_grad_norm,
-                              const uint32_t n_iter_without_progress,
-                              const std::string method)
+clusterxx::TSNE<Metric>::TSNE(
+    const uint16_t n_components, const double perplexity,
+    const double learning_rate, const double early_exaggeration,
+    const uint32_t max_iter, const double min_grad_norm,
+    const uint32_t n_iter_without_progress, const std::string method)
     : __n_components(n_components), __perplexity(perplexity),
       __learning_rate(learning_rate), __early_exaggeration(early_exaggeration),
       __max_iter(max_iter), __min_grad_norm(min_grad_norm),
-      __n_iter_without_progress(n_iter_without_progress),
-      __method(method) {
+      __n_iter_without_progress(n_iter_without_progress), __method(method) {
     assert(n_components > 0);
     assert(perplexity > 0);
     assert(learning_rate > 0.0);
