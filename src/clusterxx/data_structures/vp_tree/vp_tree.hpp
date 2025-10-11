@@ -5,6 +5,9 @@
 
 #include <armadillo>
 #include <cfloat>
+#include <memory>
+#include <queue>
+#include <vector>
 
 namespace clusterxx {
 template <typename Metric = clusterxx::metrics::euclidean_distance>
@@ -32,9 +35,14 @@ class vp_tree {
     void __k_nearest_neighbors(std::unique_ptr<vp_node> &node,
                                const arma::vec &x, MaxHeap &heap,
                                const uint32_t &k, double &tau);
+    void __radius_nearest_neighbors(std::unique_ptr<vp_node> &node,
+                                    const arma::vec &X,
+                                    std::vector<double> &dists,
+                                    std::vector<int> &inds,
+                                    const double &radius);
     uint64_t __depth(std::unique_ptr<vp_node> &root);
 
-    std::unique_ptr<vp_node> __initialize(int64_t lower, int64_t upper);
+    std::unique_ptr<vp_node> __initialize(std::vector<size_t> &indices);
 
     Metric metric;
     arma::mat __in_features;
@@ -44,6 +52,8 @@ class vp_tree {
     vp_tree(const arma::mat &X);
     std::pair<std::vector<int>, std::vector<double>>
     query(const arma::vec &X, const uint32_t &k = 1);
+    std::pair<std::vector<int>, std::vector<double>>
+    query_radius(const arma::vec &X, const double &r);
     uint64_t depth();
 };
 } // namespace clusterxx

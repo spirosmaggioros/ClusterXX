@@ -5,38 +5,44 @@
 
 template <typename Metric>
 std::unique_ptr<typename clusterxx::vp_tree<Metric>::vp_node>
-clusterxx::vp_tree<Metric>::__initialize(int64_t lower, int64_t upper) {
-    if (upper == lower) {
+clusterxx::vp_tree<Metric>::__initialize(std::vector<size_t> &indices) {
+    if (indices.empty()) {
         return nullptr;
     }
 
-    std::unique_ptr<vp_node> nn = std::make_unique<vp_node>();
-    nn->__index = lower;
+    std::unique_ptr<vp_node> _nn = std::make_unique<vp_node>();
 
-    if (upper - lower > 1) {
-        size_t _randn = rand() % (upper - lower - 1) + lower;
-        __in_features.swap_rows(lower, _randn);
-        std::vector<size_t> _indices(upper - lower);
-        std::iota(_indices.begin(), _indices.end(), lower);
-        size_t median_offset = (_indices.size()) / 2;
-        size_t median_index = _indices[median_offset];
+    if (indices.size() > 1) {
+        size_t randn = rand() % indices.size();
+        std::swap(indices[0], indices[randn]);
+    }
+    _nn->__index = indices[0];
 
-        std::nth_element(_indices.begin(), _indices.begin() + median_offset,
-                         _indices.end(), [&](size_t a, size_t b) {
-                             return metric(__in_features.row(lower).t(),
-                                           __in_features.row(a).t()) <
-                                    metric(__in_features.row(lower).t(),
-                                           __in_features.row(b).t());
-                         });
-
-        nn->__mu = metric(__in_features.row(lower).t(),
-                          __in_features.row(median_index).t());
-
-        nn->left = __initialize(lower + 1, median_index);
-        nn->right = __initialize(median_index, upper);
+    if (indices.size() == 1) {
+        _nn->__mu = 0.0;
+        return _nn;
     }
 
-    return nn;
+    std::vector<size_t> _idx_copy(indices.begin() + 1, indices.end());
+    size_t mid = _idx_copy.size() / 2;
+    std::nth_element(_idx_copy.begin(), _idx_copy.begin() + mid,
+                     _idx_copy.end(), [&](size_t a, size_t b) {
+                         return metric(__in_features.row(indices[0]).t(),
+                                       __in_features.row(a).t()) <
+                                metric(__in_features.row(indices[0]).t(),
+                                       __in_features.row(b).t());
+                     });
+    _nn->__mu = metric(__in_features.row(indices[0]).t(),
+                       __in_features.row(_idx_copy[mid]).t());
+    std::vector<size_t> _left(_idx_copy.begin(), _idx_copy.begin() + mid);
+    if (_idx_copy.size() >= mid) {
+        std::vector<size_t> _right(_idx_copy.begin() + mid, _idx_copy.end());
+        _nn->right = __initialize(_right);
+    }
+
+    _nn->left = __initialize(_left);
+
+    return _nn;
 }
 
 template <typename Metric>
@@ -48,34 +54,60 @@ void clusterxx::vp_tree<Metric>::__k_nearest_neighbors(
     }
     double _dist = metric(__in_features.row(node->__index).t(), x);
 
-    if (_dist < tau) {
-        if (heap.size() == k) {
-            heap.pop();
-        }
+    if (heap.size() < k) {
         heap.push({_dist, node->__index});
         if (heap.size() == k) {
             tau = heap.top().first;
         }
+    } else if (_dist < tau) {
+        heap.pop();
+        heap.push({_dist, node->__index});
+        tau = heap.top().first;
     }
 
     if (node->left == nullptr && node->right == nullptr) {
         return;
     }
 
-    if (_dist < node->__mu) {
-        if (_dist - tau <= node->__mu) {
-            __k_nearest_neighbors(node->left, x, heap, k, tau);
-        }
-        if (_dist + tau >= node->__mu) {
-            __k_nearest_neighbors(node->right, x, heap, k, tau);
-        }
-    } else {
-        if (_dist + tau >= node->__mu) {
-            __k_nearest_neighbors(node->right, x, heap, k, tau);
-        }
-        if (_dist - tau <= node->__mu) {
-            __k_nearest_neighbors(node->left, x, heap, k, tau);
-        }
+    if (_dist + tau < node->__mu) {
+        __k_nearest_neighbors(node->left, x, heap, k, tau);
+    }
+    if (_dist - tau > node->__mu) {
+        __k_nearest_neighbors(node->right, x, heap, k, tau);
+    }
+    if (node->__mu - tau <= _dist && _dist <= node->__mu + tau) {
+        __k_nearest_neighbors(node->right, x, heap, k, tau);
+        __k_nearest_neighbors(node->left, x, heap, k, tau);
+    }
+}
+
+template <typename Metric>
+void clusterxx::vp_tree<Metric>::__radius_nearest_neighbors(
+    std::unique_ptr<vp_node> &node, const arma::vec &x,
+    std::vector<double> &dists, std::vector<int> &inds, const double &radius) {
+    if (node == nullptr) {
+        return;
+    }
+    double _dist = metric(__in_features.row(node->__index).t(), x);
+
+    if (_dist < radius) {
+        dists.push_back(_dist);
+        inds.push_back(node->__index);
+    }
+
+    if (node->left == nullptr && node->right == nullptr) {
+        return;
+    }
+
+    if (_dist + radius < node->__mu) {
+        __radius_nearest_neighbors(node->left, x, dists, inds, radius);
+    }
+    if (_dist - radius > node->__mu) {
+        __radius_nearest_neighbors(node->right, x, dists, inds, radius);
+    }
+    if (node->__mu - radius <= _dist && _dist <= node->__mu + radius) {
+        __radius_nearest_neighbors(node->right, x, dists, inds, radius);
+        __radius_nearest_neighbors(node->left, x, dists, inds, radius);
     }
 }
 
@@ -92,7 +124,9 @@ template <typename Metric>
 clusterxx::vp_tree<Metric>::vp_tree(const arma::mat &X) : __in_features(X) {
     assert(!X.empty());
     assert(metric.p() > 0);
-    __root = __initialize(0, X.n_rows);
+    std::vector<size_t> indices(X.n_rows);
+    std::iota(indices.begin(), indices.end(), 0);
+    __root = __initialize(indices);
 }
 
 template <typename Metric>
@@ -112,6 +146,15 @@ clusterxx::vp_tree<Metric>::query(const arma::vec &X, const uint32_t &k) {
         heap.pop();
     }
 
+    return std::make_pair(inds, dists);
+}
+
+template <typename Metric>
+std::pair<std::vector<int>, std::vector<double>>
+clusterxx::vp_tree<Metric>::query_radius(const arma::vec &X, const double &r) {
+    std::vector<double> dists;
+    std::vector<int> inds;
+    __radius_nearest_neighbors(__root, X, dists, inds, r);
     return std::make_pair(inds, dists);
 }
 
