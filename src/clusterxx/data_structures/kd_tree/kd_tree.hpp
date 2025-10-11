@@ -42,13 +42,13 @@ class kd_tree {
                                           int depth = 0);
     void __k_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                const arma::vec &X, MaxHeap &heap,
-                               const int depth = 0, const int k = 1);
+                               const int depth = 0, const uint32_t k = 1);
     void __radius_nearest_neighbors(std::unique_ptr<kd_node> &node,
                                     const arma::vec &X,
                                     std::vector<double> &dists,
                                     std::vector<int> &inds, const double radius,
                                     const int depth = 0);
-    int __depth(std::unique_ptr<kd_node> &root);
+    uint64_t __depth(std::unique_ptr<kd_node> &root);
     Metric metric;
     PairwiseMetric pairwise_metric;
     unsigned int __leaf_size;
@@ -59,7 +59,7 @@ class kd_tree {
                                                            const int &k = 1);
     std::pair<std::vector<int>, std::vector<double>>
     query_radius(const arma::vec &X, const double &r);
-    int depth();
+    uint64_t depth();
 };
 } // namespace clusterxx
 

@@ -158,16 +158,21 @@ clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
 template <typename Metric>
 arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
     const __gradient_data &data) {
-    assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
-    assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
+    arma::mat gradient;
+    if (__method == "exact") {
+        assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
+        assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
+        
+        arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
+                            data.low_dim_affinities);
+        F /= (1.0 + data.pairwise_dists);
+        F.diag().zeros();
+        gradient =
+            arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
+            F * data.low_dim_features;
+    } else { // barnes-hut
 
-    arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
-                         data.low_dim_affinities);
-    F /= (1.0 + data.pairwise_dists);
-    F.diag().zeros();
-    arma::mat gradient =
-        arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
-        F * data.low_dim_features;
+    }
     return gradient;
 }
 

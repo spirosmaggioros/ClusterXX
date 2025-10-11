@@ -6,6 +6,7 @@
 
 // data structures
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
+#include "clusterxx/data_structures/vp_tree/vp_tree.hpp"
 #include "clusterxx/data_structures/graph/graph.hpp"
 
 // cluster
