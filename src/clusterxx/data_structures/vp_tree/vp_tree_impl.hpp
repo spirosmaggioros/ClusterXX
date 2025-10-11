@@ -19,7 +19,6 @@ clusterxx::vp_tree<Metric>::__initialize(std::vector<size_t> &indices) {
     _nn->__index = indices[0];
 
     if (indices.size() == 1) {
-        _nn->__mu = 0.0;
         return _nn;
     }
 
