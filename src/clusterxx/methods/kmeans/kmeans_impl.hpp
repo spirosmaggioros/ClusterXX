@@ -2,7 +2,6 @@
 #define CLUSTERXX_METHODS_KMEANS_IMPL_HPP
 
 #include "clusterxx/methods/kmeans_plus_plus/kmeans_plus_plus.hpp"
-#include "clusterxx/writing/write_json.hpp"
 
 #include "kmeans.hpp"
 #include <assert.h>

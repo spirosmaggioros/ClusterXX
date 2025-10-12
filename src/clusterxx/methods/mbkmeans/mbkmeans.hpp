@@ -17,7 +17,7 @@ class MiniBatchKMeans : public cluster_method {
 
     const uint16_t __n_clusters;
     const uint32_t __max_iter;
-    const uint32_t __batch_size;
+    uint32_t __batch_size;
     std::string __init;
     arma::mat __features;
 
@@ -31,7 +31,7 @@ class MiniBatchKMeans : public cluster_method {
     MiniBatchKMeans(const uint16_t n_clusters = 8,
                     const std::string init = "k-means++",
                     const uint32_t max_iter = 100,
-                    const uint32_t batch_size = 1024,
+                    uint32_t batch_size = 1024,
                     std::optional<int> random_state = std::nullopt);
     ~MiniBatchKMeans() {}
 
