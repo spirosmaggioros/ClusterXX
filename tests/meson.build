@@ -13,10 +13,11 @@ tests = {
     'vp_tree_tests': 'vp_tree/vp_tree_tests.cc',
     'pca_tests': 'pca/pca_tests.cc',
     'graph_tests': 'graph/graph_tests.cc',
+    'reading': 'reading/reading_tests.cc',
 }
 
 foreach test_name, test_source : tests
-    
+
     test_exe = executable(
         test_name,
         test_source,
@@ -24,6 +25,6 @@ foreach test_name, test_source : tests
         cpp_args: ['-std=c++23'],
         install: false
     )
-    
+
     test(test_name, test_exe)
 endforeach

@@ -3,21 +3,25 @@
 
 #include "clusterxx/third_party/csv.hpp"
 #include "csv_parser.hpp"
-#include <iostream>
 
-clusterxx::csv_parser::csv_parser(const std::string &csv_file) {
-    csv::CSVReader reader(csv_file);
-    std::vector<std::string> col_names = csv::get_col_names(csv_file);
-    const size_t n_rows = reader.n_rows();
-    const size_t n_cols = col_names.size();
-    if (n_rows == 0 || n_cols == 0) {
-        std::cout << "[WARNING] Parsing empty csv file" << '\n';
+#include <filesystem>
+
+clusterxx::csv_parser::csv_parser(const std::string &csv_file, const std::vector<std::string> &selected_cols) {
+    std::string abs_csv_file = std::filesystem::absolute(csv_file);
+    csv::CSVReader reader(abs_csv_file);
+    std::vector<std::string> col_names;
+    if (selected_cols.empty()) {
+        col_names = csv::get_col_names(abs_csv_file);
+    } else {
+        col_names = selected_cols;
     }
+    const size_t n_cols = col_names.size();
 
-    __data.resize(n_rows, n_cols);
+    __data.resize(0, n_cols);
 
     size_t i = 0;
     for (const auto &row : reader) {
+        __data.insert_rows(__data.n_rows, 1);
         for (size_t j = 0; j < n_cols; j++) {
             __data(i, j) = row[col_names[j]].get<double>();
         }

@@ -10,7 +10,7 @@ class csv_parser {
     arma::mat __data;
 
   public:
-    csv_parser(const std::string &csv_file);
+    csv_parser(const std::string &csv_file, const std::vector<std::string> &selected_cols = {});
     ~csv_parser() {}
 
     arma::mat data() const;
