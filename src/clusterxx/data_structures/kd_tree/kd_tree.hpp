@@ -15,15 +15,15 @@ template <typename Metric = clusterxx::metrics::euclidean_distance,
 class kd_tree {
   private:
     struct kd_node {
-        std::unique_ptr<kd_node> left = nullptr;
-        std::unique_ptr<kd_node> right = nullptr;
+        std::unique_ptr<kd_node> left;
+        std::unique_ptr<kd_node> right;
         arma::vec __point;
         arma::mat __extra_points;
         std::vector<int> __extra_points_inds;
         size_t __ind;
 
         kd_node(const arma::vec &point, const size_t ind)
-            : __point(point), __ind(ind) {}
+            : left(nullptr), right(nullptr), __point(point), __ind(ind) {}
     };
 
     struct Compare {
@@ -48,7 +48,7 @@ class kd_tree {
                                     std::vector<double> &dists,
                                     std::vector<int> &inds, const double radius,
                                     const int depth = 0);
-    uint64_t __depth(std::unique_ptr<kd_node> &root);
+    uint32_t __depth(std::unique_ptr<kd_node> &root);
     Metric metric;
     PairwiseMetric pairwise_metric;
     unsigned int __leaf_size;
@@ -59,7 +59,7 @@ class kd_tree {
                                                            const int &k = 1);
     std::pair<std::vector<int>, std::vector<double>>
     query_radius(const arma::vec &X, const double &r);
-    uint64_t depth();
+    uint32_t depth();
 };
 } // namespace clusterxx
 

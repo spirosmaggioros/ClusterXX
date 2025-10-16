@@ -11,6 +11,7 @@ tests = {
     'tsne_tests': 'tsne/tsne_tests.cc',
     'kd_tree_tests': 'kd_tree/kd_tree_tests.cc',
     'vp_tree_tests': 'vp_tree/vp_tree_tests.cc',
+    'quadtree_tests': 'quadtree/quadtree_tests.cc',
     'pca_tests': 'pca/pca_tests.cc',
     'graph_tests': 'graph/graph_tests.cc',
     'reading': 'reading/reading_tests.cc',

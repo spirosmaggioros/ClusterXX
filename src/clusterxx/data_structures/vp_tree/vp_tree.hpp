@@ -45,7 +45,7 @@ class vp_tree {
     std::unique_ptr<vp_node> __initialize(std::vector<size_t> &indices);
 
     Metric metric;
-    arma::mat __in_features;
+    const arma::mat __in_features;
     std::unique_ptr<vp_node> __root;
 
   public:

@@ -132,7 +132,7 @@ void clusterxx::kd_tree<Metric, PairwiseMetric>::__radius_nearest_neighbors(
 }
 
 template <typename Metric, typename PairwiseMetric>
-uint64_t clusterxx::kd_tree<Metric, PairwiseMetric>::__depth(
+uint32_t clusterxx::kd_tree<Metric, PairwiseMetric>::__depth(
     std::unique_ptr<kd_node> &root) {
     if (!root) {
         return 0;
@@ -184,7 +184,7 @@ clusterxx::kd_tree<Metric, PairwiseMetric>::query_radius(const arma::vec &X,
 }
 
 template <typename Metric, typename PairwiseMetric>
-uint64_t clusterxx::kd_tree<Metric, PairwiseMetric>::depth() {
+uint32_t clusterxx::kd_tree<Metric, PairwiseMetric>::depth() {
     return __depth(__root);
 }
 
