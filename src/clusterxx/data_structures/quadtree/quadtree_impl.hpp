@@ -41,7 +41,7 @@ void clusterxx::quadtree<dim, node_capacity>::__initialize() {
         _max_z = std::max(_max_z, __in_features.col(2).max());
     }
 
-    AABB<node_type> _init_space;
+    AABB<node_type> _init_space = AABB<node_type>();
     _init_space.__center.__x = (_min_x + _max_x) / 2;
     _init_space.__center.__y = (_min_y + _max_y) / 2;
 
@@ -61,6 +61,7 @@ template <uint8_t dim, uint32_t node_capacity>
 clusterxx::quadtree<dim, node_capacity>::quadtree(const arma::mat &X)
     : __in_features(X) {
     assert(!X.empty());
+    __initialize();
 }
 
 #endif
