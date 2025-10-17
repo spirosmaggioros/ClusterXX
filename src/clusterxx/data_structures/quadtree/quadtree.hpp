@@ -16,7 +16,7 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
     struct __2d_point {
         double __x;
         double __y;
-            
+
         __2d_point() : __x(0.0), __y(0.0) {}
         __2d_point(const double x, const double y) : __x(x), __y(y) {}
         std::pair<double, double> get_point() {
@@ -28,7 +28,7 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
         double __x;
         double __y;
         double __z;
-        
+
         __3d_point() : __x(0.0), __y(0.0), __z(0.0) {}
         __3d_point(const double x, const double y, const double z)
             : __x(x), __y(y), __z(z) {}
@@ -72,7 +72,7 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
                        (_x - _half_dim < x + __half_dim) ||
                        (_y + _half_dim > y - __half_dim) ||
                        (_y - _half_dim < y + __half_dim);
-;
+                ;
             } else {
                 auto [_x, _y, _z] = point.__center.get_point();
                 double _half_dim = point.__half_dim;
@@ -99,7 +99,7 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
         quadtree_node(AABB<T> &center)
             : NW(nullptr), NE(nullptr), SW(nullptr), SE(nullptr),
               __center(center) {}
-    
+
         void subdivide() {
             AABB<T> NE_center = AABB<T>();
             AABB<T> NW_center = AABB<T>();
@@ -111,7 +111,9 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
             double SW_x_center, SW_y_center, SW_z_center;
             double SE_x_center, SE_y_center, SE_z_center;
 
-            auto _set_new_centers = [&](double x, double y, std::optional<double> z = std::nullopt) -> void {
+            auto _set_new_centers = [&](double x, double y,
+                                        std::optional<double> z =
+                                            std::nullopt) -> void {
                 NE_x_center = (2 * x + __center.__half_dim) / 2;
                 NE_y_center = (2 * y + __center.__half_dim) / 2;
                 NW_x_center = (2 * x - __center.__half_dim) / 2;
