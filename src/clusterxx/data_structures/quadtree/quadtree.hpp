@@ -4,14 +4,11 @@
 #include <armadillo>
 #include <assert.h>
 #include <memory>
-#include <optional>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace clusterxx {
-template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
+template <uint32_t node_capacity = 4> class quadtree {
   private:
     struct __2d_point {
         double __x;
@@ -19,101 +16,69 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
 
         __2d_point() : __x(0.0), __y(0.0) {}
         __2d_point(const double x, const double y) : __x(x), __y(y) {}
-        std::pair<double, double> get_point() {
+        std::pair<double, double> get_point() const {
             return std::make_pair(__x, __y);
         }
     };
 
-    struct __3d_point {
-        double __x;
-        double __y;
-        double __z;
-
-        __3d_point() : __x(0.0), __y(0.0), __z(0.0) {}
-        __3d_point(const double x, const double y, const double z)
-            : __x(x), __y(y), __z(z) {}
-        std::tuple<double, double, double> get_point() {
-            return std::make_tuple(__x, __y, __z);
-        }
-    };
-
-    template <class T> struct AABB {
-        T __center;
+    struct AABB {
+        __2d_point __center;
         double __half_dim;
 
-        AABB() = default;
-
-        bool contains_point(const arma::vec &point) {
-            double _x = point(0);
-            double _y = point(1);
-            if constexpr (std::is_same_v<T, __2d_point>) {
-                assert(point.n_rows == 2);
-                auto [x, y] = __center.get_point();
-                return (x - __half_dim <= _x && _x <= x + __half_dim) &&
-                       (y - __half_dim <= _y && _y <= y + __half_dim);
-            } else {
-                assert(point.n_rows == 3);
-                double _z = point(2);
-                auto [x, y, z] = __center.get_point();
-
-                return (x - __half_dim <= _x && _x <= x + __half_dim) &&
-                       (y - __half_dim <= _y && _y <= y + __half_dim) &&
-                       (z - __half_dim <= _z && _z <= z + __half_dim);
-            }
+        AABB() {
+            __center.__x = 0.0;
+            __center.__y = 0.0;
+            __half_dim = 0.0;
         }
 
-        bool intersects_point(AABB &point) {
-            if constexpr (std::is_same_v<T, __2d_point>) {
-                auto [_x, _y] = point.__center.get_point();
-                double _half_dim = point.__half_dim;
-                auto [x, y] = __center.get_point();
+        AABB(const double &x, const double &y, const double &half_dim) {
+            __center.__x = x;
+            __center.__y = y;
+            __half_dim = half_dim;
+        }
 
-                return (_x + _half_dim > x - __half_dim) ||
-                       (_x - _half_dim < x + __half_dim) ||
-                       (_y + _half_dim > y - __half_dim) ||
-                       (_y - _half_dim < y + __half_dim);
-                ;
-            } else {
-                auto [_x, _y, _z] = point.__center.get_point();
-                double _half_dim = point.__half_dim;
-                auto [x, y, z] = __center.get_point();
-                return (_x + _half_dim > x - __half_dim) ||
-                       (_x - _half_dim < x + __half_dim) ||
-                       (_y + _half_dim > y - __half_dim) ||
-                       (_y - _half_dim < y + __half_dim) ||
-                       (_z + _half_dim > z - __half_dim) ||
-                       (_z - _half_dim < z + __half_dim);
-            }
+        bool contains_point(const arma::vec &point) const {
+            double _x = point(0);
+            double _y = point(1);
+            auto [x, y] = __center.get_point();
+            return (x - __half_dim <= _x && _x <= x + __half_dim) &&
+                   (y - __half_dim <= _y && _y <= y + __half_dim);
+        }
+
+        bool intersects_point(const AABB &point) const {
+            double dx = std::abs(__center.__x - point.__center.__x);
+            double dy = std::abs(__center.__y - point.__center.__y);
+
+            return (dx <= (__half_dim + point.__half_dim)) &&
+                   (dy <= (__half_dim + point.__half_dim));
         }
     };
 
-    template <class T> struct quadtree_node {
+    struct quadtree_node {
         std::unique_ptr<quadtree_node> NW;
         std::unique_ptr<quadtree_node> NE;
         std::unique_ptr<quadtree_node> SW;
         std::unique_ptr<quadtree_node> SE;
 
         std::vector<size_t> __points;
-        AABB<T> __center;
+        AABB __center;
 
-        quadtree_node(AABB<T> &center)
+        quadtree_node(AABB &center)
             : NW(nullptr), NE(nullptr), SW(nullptr), SE(nullptr),
               __center(center) {}
 
         void subdivide() {
-            AABB<T> NE_center = AABB<T>();
-            AABB<T> NW_center = AABB<T>();
-            AABB<T> SW_center = AABB<T>();
-            AABB<T> SE_center = AABB<T>();
+            AABB NE_center = AABB();
+            AABB NW_center = AABB();
+            AABB SW_center = AABB();
+            AABB SE_center = AABB();
 
-            double NE_x_center, NE_y_center, NE_z_center;
-            double NW_x_center, NW_y_center, NW_z_center;
-            double SW_x_center, SW_y_center, SW_z_center;
-            double SE_x_center, SE_y_center, SE_z_center;
+            double NE_x_center, NE_y_center;
+            double NW_x_center, NW_y_center;
+            double SW_x_center, SW_y_center;
+            double SE_x_center, SE_y_center;
 
-            auto _set_new_centers = [&](double x, double y,
-                                        std::optional<double> z =
-                                            std::nullopt) -> void {
+            auto _set_new_centers = [&](double x, double y) -> void {
                 NE_x_center = (2 * x + __center.__half_dim) / 2;
                 NE_y_center = (2 * y + __center.__half_dim) / 2;
                 NW_x_center = (2 * x - __center.__half_dim) / 2;
@@ -122,58 +87,44 @@ template <uint8_t dim = 2, uint32_t node_capacity = 4> class quadtree {
                 SW_y_center = (2 * y - __center.__half_dim) / 2;
                 SE_x_center = (2 * x + __center.__half_dim) / 2;
                 SE_y_center = (2 * y - __center.__half_dim) / 2;
-                if (z != std::nullopt) {
-                    NE_z_center = (2 * z.value() - __center.__half_dim) / 2;
-                    NW_z_center = (2 * z.value() - __center.__half_dim) / 2;
-                    SW_z_center = (2 * z.value() + __center.__half_dim) / 2;
-                    SE_z_center = (2 * z.value() + __center.__half_dim) / 2;
-                }
             };
 
-            if constexpr (std::is_same_v<T, __2d_point>) {
-                auto [_x, _y] = __center.__center.get_point();
-                _set_new_centers(_x, _y);
+            auto [_x, _y] = __center.__center.get_point();
+            _set_new_centers(_x, _y);
 
-                NE_center.__center = T(NE_x_center, NE_y_center);
-                NW_center.__center = T(NW_x_center, NW_y_center);
-                SW_center.__center = T(SW_x_center, SW_y_center);
-                SE_center.__center = T(SE_x_center, SE_y_center);
-            } else {
-                auto [_x, _y, _z] = __center.__center.get_point();
-                _set_new_centers(_x, _y, _z);
-
-                NE_center.__center = T(NE_x_center, NE_y_center, NE_z_center);
-                NW_center.__center = T(NW_x_center, NW_y_center, NW_z_center);
-                SE_center.__center = T(SE_x_center, SE_y_center, SE_z_center);
-                SW_center.__center = T(SW_x_center, SW_y_center, SW_z_center);
-            }
+            NE_center.__center = __2d_point(NE_x_center, NE_y_center);
+            NW_center.__center = __2d_point(NW_x_center, NW_y_center);
+            SW_center.__center = __2d_point(SW_x_center, SW_y_center);
+            SE_center.__center = __2d_point(SE_x_center, SE_y_center);
 
             NE_center.__half_dim = __center.__half_dim / 2;
             NW_center.__half_dim = NE_center.__half_dim;
             SE_center.__half_dim = NE_center.__half_dim;
             SW_center.__half_dim = NE_center.__half_dim;
 
-            NE = std::make_unique<quadtree_node<T>>(NE_center);
-            NW = std::make_unique<quadtree_node<T>>(NW_center);
-            SE = std::make_unique<quadtree_node<T>>(SE_center);
-            SW = std::make_unique<quadtree_node<T>>(SW_center);
+            NE = std::make_unique<quadtree_node>(NE_center);
+            NW = std::make_unique<quadtree_node>(NW_center);
+            SE = std::make_unique<quadtree_node>(SE_center);
+            SW = std::make_unique<quadtree_node>(SW_center);
         }
         bool is_full() { return __points.size() >= node_capacity; }
     };
 
-    using node_type = std::conditional_t<dim == 2, __2d_point, __3d_point>;
-    std::unique_ptr<quadtree_node<node_type>> __root;
-
+    std::unique_ptr<quadtree_node> __root;
     const arma::mat __in_features;
 
-    void __insert(std::unique_ptr<quadtree_node<node_type>> &node,
-                  const size_t idx);
+    void __insert(std::unique_ptr<quadtree_node> &node, const size_t idx);
     void __initialize();
+    void __range_query(std::unique_ptr<quadtree_node> &node,
+                       std::vector<size_t> &pts_in_range,
+                       const AABB &search_space);
 
   public:
     quadtree(const arma::mat &X);
     ~quadtree() {}
 
+    std::vector<size_t> range_query(const arma::vec &point,
+                                    const double &half_dim);
     uint32_t depth() const;
 };
 } // namespace clusterxx
