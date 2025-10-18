@@ -2,6 +2,7 @@
 #define CLUSTERXX_METHODS_TSNE_IMPL_HPP
 
 #include "clusterxx/data_structures/kd_tree/kd_tree.hpp"
+#include "clusterxx/data_structures/quadtree/quadtree.hpp"
 #include "tsne.hpp"
 
 #include <float.h>
@@ -162,7 +163,7 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
     if (__method == "exact") {
         assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
         assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
-        
+
         arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
                             data.low_dim_affinities);
         F /= (1.0 + data.pairwise_dists);
@@ -171,7 +172,16 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
             arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
             F * data.low_dim_features;
     } else { // barnes-hut
-
+        clusterxx::quadtree sptree = clusterxx::quadtree(data.low_dim_affinities);
+        arma::mat q_i_cell;
+        for (size_t i = 0; i < data.low_dim_affinities.n_rows; i++) {
+            auto [_curr_cell, _node_center] = sptree.barnes_hut_range_query(data.low_dim_affiniies.row(i).t(), data.r_cell, data.theta);
+            size_t n_cell = _curr_cell.size();
+            for (const size_t &ind: _curr_cell) {
+                q_i_cell.insert_rows(q_i_cell.n_rows - 1, 1);
+                q_i_cell(q_i_cell.n_rows - 1) = data.low_dim_affinities.row(ind).t();
+            } // TODO
+        }
     }
     return gradient;
 }
@@ -183,7 +193,6 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     assert(__perplexity < X.n_rows);
 
     __features = X;
-    // compute pairwise affinities
     arma::mat p_ji = __compute_pairwise_affinities(X);
     arma::mat symmetrized;
     if (__method == "exact") {

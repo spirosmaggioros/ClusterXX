@@ -129,6 +129,11 @@ template <uint32_t node_capacity = 4> class quadtree {
     void __range_query(std::unique_ptr<quadtree_node> &node,
                        std::vector<size_t> &pts_in_range,
                        const AABB &search_space);
+    void __barnes_hut_range_query(std::unique_ptr<quadtree_node> &node,
+                                  const double &theta,
+                                  std::vector<size_t> &pts_in_range,
+                                  __2d_point &node_center,
+                                  const AABB &search_space);
 
   public:
     quadtree(const arma::mat &X);
@@ -136,6 +141,9 @@ template <uint32_t node_capacity = 4> class quadtree {
 
     std::vector<size_t> range_query(const arma::vec &point,
                                     const double &half_dim);
+    std::pair<std::vector<size_t>, std::pair<double, double>> barnes_hut_range_query(const arma::vec &point,
+                                               const double &half_dim,
+                                               const double &theta);
     uint32_t depth() const;
 };
 } // namespace clusterxx
