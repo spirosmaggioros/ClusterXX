@@ -137,7 +137,6 @@ template <uint32_t node_capacity = 4> class quadtree {
     std::vector<size_t> range_query(const arma::vec &point,
                                     const double &half_dim);
     uint32_t depth() const;
-    friend std::ostream &operator<<(std::ostream &out, const quadtree &tree);
 };
 } // namespace clusterxx
 
