@@ -32,6 +32,7 @@ template <uint32_t node_capacity>
 void clusterxx::quadtree<node_capacity>::__initialize() {
     double _min_x = DBL_MAX, _max_x = DBL_MIN;
     double _min_y = DBL_MAX, _max_y = DBL_MIN;
+
     _min_x = std::min(_min_x, __in_features.col(0).min());
     _max_x = std::max(_max_x, __in_features.col(0).max());
     _min_y = std::min(_min_y, __in_features.col(1).min());
@@ -41,7 +42,13 @@ void clusterxx::quadtree<node_capacity>::__initialize() {
     _init_space.__center.__x = (_min_x + _max_x) / 2;
     _init_space.__center.__y = (_min_y + _max_y) / 2;
 
-    _init_space.__half_dim = _max_x - _init_space.__center.__x / 2;
+    double max_x_axis = std::max(std::abs(_min_x), std::abs(_max_x));
+    double max_y_axis = std::max(std::abs(_min_y), std::abs(_max_y));
+    if (max_x_axis > max_y_axis) {
+        _init_space.__half_dim = max_x_axis - _init_space.__center.__x;
+    } else {
+        _init_space.__half_dim = max_y_axis - _init_space.__center.__y;
+    }
     __root = std::make_unique<quadtree_node>(_init_space);
 
     for (size_t i = 0; i < __in_features.n_rows; i++) {
@@ -78,7 +85,7 @@ template <uint32_t node_capacity>
 std::vector<size_t>
 clusterxx::quadtree<node_capacity>::range_query(const arma::vec &point,
                                                 const double &half_dim) {
-    assert(point.n_cols == 2 && point.n_rows == 1);
+    assert(point.n_elem == 2);
     AABB search_space = AABB(point(0), point(1), half_dim);
 
     std::vector<size_t> pts_in_range;
