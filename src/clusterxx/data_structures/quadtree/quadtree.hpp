@@ -20,7 +20,8 @@ template <uint32_t node_capacity = 4> class quadtree {
             return std::make_pair(__x, __y);
         }
 
-        friend std::ostream &operator << (std::ostream &out, const __2d_point &point) {
+        friend std::ostream &operator<<(std::ostream &out,
+                                        const __2d_point &point) {
             out << '[' << point.__x << ", " << point.__y << "]";
             return out;
         }
@@ -58,7 +59,7 @@ template <uint32_t node_capacity = 4> class quadtree {
                    (dy <= (__half_dim + point.__half_dim));
         }
 
-        friend std::ostream &operator << (std::ostream &out, const AABB &a) {
+        friend std::ostream &operator<<(std::ostream &out, const AABB &a) {
             out << a.__center << ", half_dim: " << a.__half_dim << '\n';
             return out;
         }
@@ -128,6 +129,7 @@ template <uint32_t node_capacity = 4> class quadtree {
     void __range_query(std::unique_ptr<quadtree_node> &node,
                        std::vector<size_t> &pts_in_range,
                        const AABB &search_space);
+
   public:
     quadtree(const arma::mat &X);
     ~quadtree() {}
@@ -135,7 +137,7 @@ template <uint32_t node_capacity = 4> class quadtree {
     std::vector<size_t> range_query(const arma::vec &point,
                                     const double &half_dim);
     uint32_t depth() const;
-    friend std::ostream &operator << (std::ostream &out, const quadtree &tree);
+    friend std::ostream &operator<<(std::ostream &out, const quadtree &tree);
 };
 } // namespace clusterxx
 
