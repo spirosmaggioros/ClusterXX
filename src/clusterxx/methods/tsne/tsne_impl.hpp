@@ -161,28 +161,73 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
     const __gradient_data &data) {
     arma::mat gradient;
     if (__method == "exact") {
-        assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
-        assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
+        assert(data.pairwise_affinities.n_rows ==
+               data.low_dim_affinities.n_rows);
+        assert(data.pairwise_affinities.n_cols ==
+               data.low_dim_affinities.n_cols);
 
         arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
-                            data.low_dim_affinities);
+                             data.low_dim_affinities);
         F /= (1.0 + data.pairwise_dists);
         F.diag().zeros();
-        gradient =
-            arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
-            F * data.low_dim_features;
+        gradient = arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
+                   F * data.low_dim_features;
     } else { // barnes-hut
-        clusterxx::quadtree sptree = clusterxx::quadtree(data.low_dim_affinities);
-        arma::mat q_i_cell;
+        clusterxx::metrics::squared_euclidean_distance squared_euclidean;
+        gradient.resize(data.low_dim_features.n_rows,
+                        data.low_dim_features.n_cols);
+        clusterxx::quadtree sptree = clusterxx::quadtree(data.low_dim_features);
+
+        arma::mat f_attr(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
+        arma::mat f_rep(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
+
+        double Z = 0.0;
+        arma::mat Z_with_nom(gradient.n_rows, gradient.n_cols);
+
+        std::vector<bool> visited(data.low_dim_affinities.n_rows, false);
         for (size_t i = 0; i < data.low_dim_affinities.n_rows; i++) {
-            auto [_curr_cell, _node_center] = sptree.barnes_hut_range_query(data.low_dim_affiniies.row(i).t(), data.r_cell, data.theta);
-            size_t n_cell = _curr_cell.size();
-            for (const size_t &ind: _curr_cell) {
-                q_i_cell.insert_rows(q_i_cell.n_rows - 1, 1);
-                q_i_cell(q_i_cell.n_rows - 1) = data.low_dim_affinities.row(ind).t();
-            } // TODO
+            auto [_curr_cell, _node_center] = sptree.barnes_hut_range_query(
+                data.low_dim_features.row(i).t(), data.r_cell, data.theta);
+            arma::vec _node_center_arma(2);
+            _node_center_arma(0) = _node_center.first;
+            _node_center_arma(1) = _node_center.second;
+
+            double z_estimate;
+            arma::rowvec z_estimate_with_nom(Z_with_nom.n_cols);
+
+            arma::rowvec _curr_row(f_rep.n_cols);
+
+            const double points_dist = squared_euclidean(
+                data.low_dim_features.row(i).t(), _node_center_arma);
+
+            z_estimate = 1 / (1 + points_dist);
+            Z += z_estimate;
+            z_estimate_with_nom =
+                (data.low_dim_features.row(i).t() - _node_center_arma).t();
+            z_estimate_with_nom *= 2;
+
+            _curr_row = z_estimate;
+            _curr_row *= _curr_row;
+
+            _curr_row *=
+                _curr_cell.size() *
+                (data.low_dim_features.row(i).t() - _node_center_arma).t();
+
+            for (size_t j = 0; j < _curr_cell.size(); j++) {
+                if (!visited[_curr_cell[j]]) {
+                    f_rep.row(_curr_cell[j]) = _curr_row;
+                    Z_with_nom.row(_curr_cell[j]) = z_estimate_with_nom;
+                    visited[_curr_cell[j]] = true;
+                }
+            }
         }
+
+        f_rep /= Z;
+        f_attr = arma::accu(__early_exaggeration * data.pairwise_affinities) *
+                 Z_with_nom;
+        gradient = 4 * (f_attr - f_rep);
     }
+
     return gradient;
 }
 
@@ -240,21 +285,22 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             break;
         }
 
-        if (i > static_cast<int>(0.25 * __max_iter) && i % 50 == 0) {
-            double kl_loss =
-                arma::accu((symmetrized + 1e-12) %
-                           arma::log((symmetrized + 1e-12) / (q_ij + 1e-12)));
-            if (kl_loss > best_loss) {
-                n_iter_no_progress += 50;
-            } else {
-                n_iter_no_progress = 0;
-                best_loss = kl_loss;
-            }
+        // if (i > static_cast<int>(0.25 * __max_iter) && i % 50 == 0) {
+        //     double kl_loss =
+        //         arma::accu((symmetrized + 1e-12) %
+        //                    arma::log((symmetrized + 1e-12) / (q_ij +
+        //                    1e-12)));
+        //     if (kl_loss > best_loss) {
+        //         n_iter_no_progress += 50;
+        //     } else {
+        //         n_iter_no_progress = 0;
+        //         best_loss = kl_loss;
+        //     }
 
-            if (n_iter_no_progress >= __n_iter_without_progress) {
-                break;
-            }
-        }
+        //     if (n_iter_no_progress >= __n_iter_without_progress) {
+        //         break;
+        //     }
+        // }
 
         // update solution
         Y_inc = (__momentum * Y_inc) - (__learning_rate * gradients);
