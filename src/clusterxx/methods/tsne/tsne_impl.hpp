@@ -177,6 +177,7 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
         gradient.resize(data.low_dim_features.n_rows,
                         data.low_dim_features.n_cols);
         clusterxx::quadtree sptree = clusterxx::quadtree(data.low_dim_features);
+        std::cout << "SPTree depth: " << sptree.depth() << '\n';
 
         arma::mat f_attr(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
         arma::mat f_rep(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
@@ -184,10 +185,9 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
         double Z = 0.0;
         arma::mat Z_with_nom(gradient.n_rows, gradient.n_cols);
 
-        std::vector<bool> visited(data.low_dim_affinities.n_rows, false);
-        for (size_t i = 0; i < data.low_dim_affinities.n_rows; i++) {
+        for (size_t i = 0; i < data.low_dim_features.n_rows; i++) {
             auto [_curr_cell, _node_center] = sptree.barnes_hut_range_query(
-                data.low_dim_features.row(i).t(), data.r_cell, data.theta);
+                data.low_dim_features.row(i).t(), data.theta);
             arma::vec _node_center_arma(2);
             _node_center_arma(0) = _node_center.first;
             _node_center_arma(1) = _node_center.second;
@@ -213,12 +213,12 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
                 _curr_cell.size() *
                 (data.low_dim_features.row(i).t() - _node_center_arma).t();
 
+            f_rep.row(i) = _curr_row;
+            Z_with_nom.row(i) = z_estimate_with_nom;
+
             for (size_t j = 0; j < _curr_cell.size(); j++) {
-                if (!visited[_curr_cell[j]]) {
-                    f_rep.row(_curr_cell[j]) = _curr_row;
-                    Z_with_nom.row(_curr_cell[j]) = z_estimate_with_nom;
-                    visited[_curr_cell[j]] = true;
-                }
+                f_rep.row(_curr_cell[j]) = _curr_row;
+                Z_with_nom.row(_curr_cell[j]) = z_estimate_with_nom;
             }
         }
 

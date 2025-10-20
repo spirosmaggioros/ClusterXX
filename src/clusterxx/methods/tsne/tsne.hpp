@@ -31,8 +31,7 @@ class TSNE : public clusterxx::manifold_method {
         arma::mat low_dim_affinities;
         arma::mat low_dim_features;
         arma::mat pairwise_dists;
-        double r_cell = 0.5;
-        double theta = 0.5;
+        double theta = 1.0;
     };
 
     void __fit(const arma::mat &X);
