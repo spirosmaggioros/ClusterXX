@@ -82,51 +82,54 @@ void clusterxx::quadtree<node_capacity>::__range_query(
 }
 
 template <uint32_t node_capacity>
-void clusterxx::quadtree<node_capacity>::__barnes_hut_range_query(
-    std::unique_ptr<quadtree_node> &node, const double &theta,
+void clusterxx::quadtree<node_capacity>::__barnes_hut_range_query(const double &theta,
     std::vector<size_t> &pts_in_range, __2d_point &node_center, const AABB &search_space) {
-    if (!node->__center.intersects_point(search_space)) {
+    if (!__root) {
         return;
-    } // SOLVE THIS NOW
+    }
 
-    double node_center_x = node->__center.__center.__x;
-    double node_center_y = node->__center.__center.__y;
+    std::queue<quadtree_node *> q;
+    q.push(__root.get());
 
-    double dx = search_space.__center.__x - node_center_x;
-    double dy = search_space.__center.__y - node_center_y;
+    while (!q.empty()) {
+        size_t size = q.size();
+        for (size_t i = 0; i < size; i++) {
+            quadtree_node *current = q.front();
+            q.pop();
+            
+            double node_center_x = current->__center.__center.__x;
+            double node_center_y = current->__center.__center.__y;
 
-    double r = 2.0 * node->__center.__half_dim;
-    double s = std::sqrt(dx * dx + dy * dy);
+            double dx = search_space.__center.__x - node_center_x;
+            double dy = search_space.__center.__y - node_center_y;
 
-    if (r > 0.0 && (s / r) > theta) {
-        for (size_t i = 0; i < node->__points.size(); i++) {
-            pts_in_range.push_back(node->__points[i]);
+            double r = 2.0 * current->__center.__half_dim;
+            double dist = std::sqrt(dx * dx + dy * dy);
+
+            if (r > 0.0 && (dist / r) > theta) {
+                for (size_t i = 0; i < current->__points.size(); i++) {
+                    pts_in_range.push_back(current->__points[i]);
+                }
+                node_center.__x = node_center_x;
+                node_center.__y = node_center_y;
+                return;
+            }
+
+
+            if (current->NW) {
+                q.push(current->NW.get());
+            }
+            if (current->NE) {
+                q.push(current->NE.get());
+            }
+            if (current->SW) {
+                q.push(current->SW.get());
+            }
+            if (current->SE) {
+                q.push(current->SE.get());
+            }
         }
-
-        node_center.__x = node_center_x;
-        node_center.__y = node_center_y;
-        return;
     }
-
-    if (r == 0.0) {
-        for (size_t i = 0; i < node->__points.size(); i++) {
-            pts_in_range.push_back(node->__points[i]);
-        }
-
-        node_center.__x = node_center_x;
-        node_center.__y = node_center_y;
-        return;
-    }
-
-
-    if (!node->NW) {
-        return;
-    }
-
-    __barnes_hut_range_query(node->NW, theta, pts_in_range, node_center, search_space);
-    __barnes_hut_range_query(node->NE, theta, pts_in_range, node_center, search_space);
-    __barnes_hut_range_query(node->SW, theta, pts_in_range, node_center, search_space);
-    __barnes_hut_range_query(node->SE, theta, pts_in_range, node_center, search_space);
 }
 
 template <uint32_t node_capacity>
@@ -151,7 +154,7 @@ clusterxx::quadtree<node_capacity>::barnes_hut_range_query(const arma::vec &poin
 
     std::vector<size_t> pts_in_range;
     __2d_point node_center;
-    __barnes_hut_range_query(__root, theta, pts_in_range, node_center, search_space);
+    __barnes_hut_range_query(theta, pts_in_range, node_center, search_space);
     return std::make_pair(pts_in_range, std::make_pair(node_center.__x, node_center.__y));
 }
 

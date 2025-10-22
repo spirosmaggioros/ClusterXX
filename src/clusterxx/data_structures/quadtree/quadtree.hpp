@@ -59,6 +59,14 @@ template <uint32_t node_capacity = 4> class quadtree {
                    (dy <= (__half_dim + point.__half_dim));
         }
 
+        bool intersects_point(const double &x, const double &y, const double &half_dim) {
+            double dx = std::abs(__center.__x - x);
+            double dy = std::abs(__center.__y - y);
+
+            return (dx <= (__half_dim + half_dim)) &&
+                   (dy <= (__half_dim + half_dim));
+        }
+
         friend std::ostream &operator<<(std::ostream &out, const AABB &a) {
             out << a.__center << ", half_dim: " << a.__half_dim << '\n';
             return out;
@@ -129,8 +137,7 @@ template <uint32_t node_capacity = 4> class quadtree {
     void __range_query(std::unique_ptr<quadtree_node> &node,
                        std::vector<size_t> &pts_in_range,
                        const AABB &search_space);
-    void __barnes_hut_range_query(std::unique_ptr<quadtree_node> &node,
-                                  const double &theta,
+    void __barnes_hut_range_query(const double &theta,
                                   std::vector<size_t> &pts_in_range,
                                   __2d_point &node_center,
                                   const AABB &search_space);

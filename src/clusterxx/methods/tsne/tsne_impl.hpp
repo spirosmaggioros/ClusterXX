@@ -177,7 +177,6 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
         gradient.resize(data.low_dim_features.n_rows,
                         data.low_dim_features.n_cols);
         clusterxx::quadtree sptree = clusterxx::quadtree(data.low_dim_features);
-        std::cout << "SPTree depth: " << sptree.depth() << '\n';
 
         arma::mat f_attr(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
         arma::mat f_rep(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
@@ -188,6 +187,7 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
         for (size_t i = 0; i < data.low_dim_features.n_rows; i++) {
             auto [_curr_cell, _node_center] = sptree.barnes_hut_range_query(
                 data.low_dim_features.row(i).t(), data.theta);
+            std::cout << "Curr cell size: " << _curr_cell.size() << '\n';
             arma::vec _node_center_arma(2);
             _node_center_arma(0) = _node_center.first;
             _node_center_arma(1) = _node_center.second;
