@@ -49,7 +49,7 @@ class TSNE : public clusterxx::manifold_method {
          const double early_exaggeration = 12.0, const uint32_t max_iter = 1000,
          const double min_grad_norm = 1e-7,
          const uint32_t n_iter_without_progress = 300,
-         const std::string method = "barnes_hut");
+         const std::string method = "exact");
     ~TSNE() {}
 
     void fit(const arma::mat &X) override;

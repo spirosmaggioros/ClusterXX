@@ -58,89 +58,26 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
     const arma::mat &features) {
     arma::mat p_ji;
     arma::mat pairwise_dists;
-    if (__method == "exact") {
-        p_ji.resize(features.n_rows, features.n_rows);
-        pairwise_dists = metric(features);
-        for (size_t i = 0; i < features.n_rows; i++) {
-            double beta = __compute_beta(pairwise_dists, __perplexity, i);
+    p_ji.resize(features.n_rows, features.n_rows);
+    pairwise_dists = metric(features);
+    for (size_t i = 0; i < features.n_rows; i++) {
+        double beta = __compute_beta(pairwise_dists, __perplexity, i);
 
-            double sum = 0.0;
-            for (size_t j = 0; j < features.n_rows; j++) {
-                if (i == j) [[unlikely]] {
-                    p_ji(i, j) = 0.0;
-                } else {
-                    p_ji(i, j) = std::exp(-beta * pairwise_dists(i, j));
-                    sum += p_ji(i, j);
-                }
-            }
-            if (sum > 0) {
-                p_ji.row(i) /= sum;
-            }
-        }
-    } else { // barnes_hut
-        int u = std::ceil(3 * __perplexity);
-        if (u > features.n_rows) {
-            p_ji.resize(features.n_rows, features.n_rows);
-        } else {
-            p_ji.resize(features.n_rows, std::ceil(3 * __perplexity));
-        }
-        kd_tree<> _kd_tree = kd_tree<>(features);
-        for (size_t i = 0; i < features.n_rows; i++) {
-            auto [inds, dists] = _kd_tree.query(features.row(i).t(), u);
-            arma::mat pairwise_dists(dists);
-            pairwise_dists = pairwise_dists.t();
-
-            double beta = __compute_beta(pairwise_dists, __perplexity, 0);
-
-            double sum = 0.0;
-            for (size_t j = 0; j < p_ji.n_cols; j++) {
-                p_ji(i, j) = std::exp(-beta * pairwise_dists(0, j));
+        double sum = 0.0;
+        for (size_t j = 0; j < features.n_rows; j++) {
+            if (i == j) [[unlikely]] {
+                p_ji(i, j) = 0.0;
+            } else {
+                p_ji(i, j) = std::exp(-beta * pairwise_dists(i, j));
                 sum += p_ji(i, j);
             }
-            if (sum > 0) {
-                p_ji.row(i) /= sum;
-            }
+        }
+        if (sum > 0) {
+            p_ji.row(i) /= sum;
         }
     }
 
     return p_ji;
-}
-
-template <typename Metric>
-arma::mat clusterxx::TSNE<Metric>::__symmetrize_sparse_affinities(
-    const arma::mat &p_ji_sparse) {
-    int u = std::ceil(3 * __perplexity);
-    std::map<std::pair<int, int>, double> sparse_map;
-    kd_tree<> _kd_tree = kd_tree<>(__features);
-    for (int i = 0; i < __features.n_rows; i++) {
-        auto [inds, dists] = _kd_tree.query(__features.row(i).t(), u);
-
-        for (int k = 0; k < std::min(u, (int)inds.size()); k++) {
-            int j = inds[k];
-            if (i != j) {
-                sparse_map[{i, j}] = p_ji_sparse(i, k);
-            }
-        }
-    }
-
-    arma::mat p_ij_symm;
-    p_ij_symm.zeros(__features.n_rows, u);
-
-    for (size_t i = 0; i < __features.n_rows; i++) {
-        auto [inds, dists] = _kd_tree.query(__features.row(i).t(), u);
-
-        for (int k = 0; k < std::min(u, (int)inds.size()); k++) {
-            int j = inds[k];
-            if (i != j) {
-                double p_ij = sparse_map.count({i, j}) ? sparse_map[{i, j}] : 0;
-                double p_ji = sparse_map.count({j, i}) ? sparse_map[{j, i}] : 0;
-
-                p_ij_symm(i, k) = (p_ij + p_ji) / (2.0 * __features.n_rows);
-            }
-        }
-    }
-
-    return p_ij_symm;
 }
 
 template <typename Metric>
@@ -160,18 +97,18 @@ arma::mat clusterxx::TSNE<Metric>::__kullback_leibler_gradient(
     const __gradient_data &data) {
     arma::mat gradient;
     if (__method == "exact") {
-        assert(data.pairwise_affinities.n_rows == data.low_dim_affinities.n_rows);
-        assert(data.pairwise_affinities.n_cols == data.low_dim_affinities.n_cols);
-        
+        assert(data.pairwise_affinities.n_rows ==
+               data.low_dim_affinities.n_rows);
+        assert(data.pairwise_affinities.n_cols ==
+               data.low_dim_affinities.n_cols);
+
         arma::mat F = 4.0 * (__early_exaggeration * data.pairwise_affinities -
-                            data.low_dim_affinities);
+                             data.low_dim_affinities);
         F /= (1.0 + data.pairwise_dists);
         F.diag().zeros();
-        gradient =
-            arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
-            F * data.low_dim_features;
+        gradient = arma::diagmat(arma::sum(F, 1)) * data.low_dim_features -
+                   F * data.low_dim_features;
     } else { // barnes-hut
-
     }
     return gradient;
 }
@@ -186,11 +123,7 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     // compute pairwise affinities
     arma::mat p_ji = __compute_pairwise_affinities(X);
     arma::mat symmetrized;
-    if (__method == "exact") {
-        symmetrized = (p_ji + p_ji.t()) / (2.0 * X.n_rows);
-    } else {
-        symmetrized = __symmetrize_sparse_affinities(p_ji);
-    }
+    symmetrized = (p_ji + p_ji.t()) / (2.0 * X.n_rows);
 
     // sample initial solution from N(0, 1e-4)
     std::random_device rd;
