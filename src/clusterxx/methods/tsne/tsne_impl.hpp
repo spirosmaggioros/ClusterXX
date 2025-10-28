@@ -120,12 +120,10 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
     assert(__perplexity < X.n_rows);
 
     __features = X;
-    // compute pairwise affinities
     arma::mat p_ji = __compute_pairwise_affinities(X);
     arma::mat symmetrized;
     symmetrized = (p_ji + p_ji.t()) / (2.0 * X.n_rows);
 
-    // sample initial solution from N(0, 1e-4)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<double> dist(0.0, 1e-4);
@@ -150,14 +148,12 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             __early_exaggeration = 1.0;
         }
 
-        // compute low dimensional affinities(q_ij)
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
         __gradient_data g_data = {.pairwise_affinities = symmetrized,
                                   .low_dim_affinities = q_ij,
                                   .low_dim_features = Y,
                                   .pairwise_dists = sol_pairwise_dists};
 
-        // compute gradient
         arma::mat gradients = __kullback_leibler_gradient(g_data);
         double grad_norm = arma::norm(gradients, "fro");
         if (grad_norm < __min_grad_norm) {
@@ -180,7 +176,6 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             }
         }
 
-        // update solution
         Y_inc = (__momentum * Y_inc) - (__learning_rate * gradients);
         Y += Y_inc;
     }
