@@ -27,7 +27,7 @@ int main() {
 }
 ```
 
-More examples and tutorials will come soon.
+You can see more examples at [examples](/examples)
 
 ## Currently implemented methods and data structures:
 - [X] DBSCAN
