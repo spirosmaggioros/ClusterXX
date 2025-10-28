@@ -7,7 +7,8 @@ ClusterXX is a C++ library that includes **clustering, manifold and decompositio
 #include <clusterxx.hpp>
 
 int main() {
-    arma::mat X = {...};
+    clusterxx::csv_parser parser = clusterxx::csv_parser("dataset.csv");
+    auto X = parser.data();
     clusterxx::DBSCAN dbscan = clusterxx::DBSCAN(
         0.5, /* eps */
         5, /* num_samples */
@@ -16,7 +17,7 @@ int main() {
     std::vector<int> labels = dbscan.fit_predict(X);
 
     clusterxx::PCA pca = clusterxx::PCA(30 /* n_components */);
-    arma::mat latent_features = pca.fit_transform(X);
+    auto latent_features = pca.fit_transform(X);
 }
 ```
 
@@ -51,5 +52,5 @@ meson test -C build
 ```
 
 ## Contributions:
-Contribution are open, you can contribute by solving open issues or by submitting a PR with an implementation/addition.
+Contributions are open, you can contribute by solving open issues or by submitting a PR with an implementation/addition.
 For any information or question contact spiros at **spirosmag@ieee.org**
