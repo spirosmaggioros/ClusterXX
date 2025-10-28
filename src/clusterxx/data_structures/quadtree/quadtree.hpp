@@ -8,6 +8,9 @@
 #include <vector>
 
 namespace clusterxx {
+    /**
+     * @brief quadtree implementation(for 2D points)
+     */
 template <uint32_t node_capacity = 4> class quadtree {
   private:
     struct __2d_point {
@@ -131,11 +134,24 @@ template <uint32_t node_capacity = 4> class quadtree {
                        const AABB &search_space);
 
   public:
+  /**
+   * @brief Default constructor of the quadtree class
+   * @param X: the passed features to construct the metric tree
+   */
     quadtree(const arma::mat &X);
     ~quadtree() {}
 
+    /**
+     * @brief Returns all features that exist inside the passed search space
+     * @param point(arma::vec): center of the search space
+     * @param half_dim: half dimension of the search space(2 * half_dim is the full search space)
+     */
     std::vector<size_t> range_query(const arma::vec &point,
                                     const double &half_dim);
+    /**
+     * @brief Returns the depth of the tree(mostly for debugging purposes)
+     * @return uint32_t: the depth of the tree
+     */
     uint32_t depth() const;
 };
 } // namespace clusterxx

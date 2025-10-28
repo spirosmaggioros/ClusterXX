@@ -10,6 +10,9 @@
 #include <vector>
 
 namespace clusterxx {
+    /**
+     * @brief Vantage point tree implementation
+     */
 template <typename Metric = clusterxx::metrics::euclidean_distance>
 class vp_tree {
   private:
@@ -49,11 +52,33 @@ class vp_tree {
     std::unique_ptr<vp_node> __root;
 
   public:
+  /**
+   * @brief Default constructor of the vp_tree class
+   * @param X: the passed features to construct the metric tree
+   */
     vp_tree(const arma::mat &X);
+    /**
+     * @brief Returns the k-nearest neighbors of passed vector
+     * @param X: the passed vector
+     * @param k: the number of nearest neighbors to return
+     *
+     * @return std::pair<std::vector<int>, std::vector<double>>: the indices and distances of the k-nearest neighbors
+     */
     std::pair<std::vector<int>, std::vector<double>>
     query(const arma::vec &X, const uint32_t &k = 1);
+    /**
+     * @brief Returns all features that are not further than r from X
+     * @param X: the passed vector
+     * @param r: the radius value
+     *
+     * @return std::pair<std::vector<int>, std::vector<double>>: the indices and distances of the returned features
+     */
     std::pair<std::vector<int>, std::vector<double>>
     query_radius(const arma::vec &X, const double &r);
+    /**
+     * @brief Returns the depth of the tree(mostly for debugging purposes)
+     * @return uint32_t: the depth of the tree
+     */
     uint64_t depth();
 };
 } // namespace clusterxx

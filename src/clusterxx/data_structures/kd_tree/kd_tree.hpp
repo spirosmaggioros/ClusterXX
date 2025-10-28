@@ -9,6 +9,9 @@
 #include <vector>
 
 namespace clusterxx {
+    /**
+     * @brief k-d tree class
+     */
 template <typename Metric = clusterxx::metrics::euclidean_distance,
           typename PairwiseMetric =
               clusterxx::pairwise_distances::euclidean_distances>
@@ -54,11 +57,34 @@ class kd_tree {
     unsigned int __leaf_size;
 
   public:
+  /**
+   * @brief Default constructor of the k-d tree class
+   * @param X: the passed features to construct the metric tree
+   * @param leaf_size: the number of data that a leaf can hold
+   */
     kd_tree(const arma::mat &X, const uint16_t leaf_size = 40);
+    /**
+     * @brief Returns k-nearest neighbors of passed vector
+     * @param X: the passed vector
+     * @param k: the number of nearest neighbors to return
+     *
+     * @return std::pair<std::vector<int>, std::vector<double>>: the indices and distances of the k-nearest neighbors
+     */
     std::pair<std::vector<int>, std::vector<double>> query(const arma::vec &X,
                                                            const int &k = 1);
+    /**
+     * @brief Returns all features that are not further than r from X
+     * @param X: the passed vector
+     * @param r: the radius value
+     *
+     * @return std::pair<std::vector<int>, std::vector<double>>: the indices and distances of the returned features
+     */
     std::pair<std::vector<int>, std::vector<double>>
     query_radius(const arma::vec &X, const double &r);
+    /**
+     * @brief Returns the depth of the tree(mostly for debugging purposes)
+     * @return uint32_t: the depth of the tree
+     */
     uint32_t depth();
 };
 } // namespace clusterxx
