@@ -82,10 +82,10 @@ void clusterxx::MiniBatchKMeans<Metric>::__fit(const arma::mat &X) {
 
 template <typename Metric>
 clusterxx::MiniBatchKMeans<Metric>::MiniBatchKMeans(
-    const uint16_t n_clusters, const std::string init, const uint32_t max_iter,
-    uint32_t batch_size, std::optional<int> random_state)
-    : __n_clusters(n_clusters), __init(init), __max_iter(max_iter),
-      __batch_size(batch_size), __random_state(random_state) {
+    const uint16_t n_clusters, const uint32_t max_iter, uint32_t batch_size,
+    const std::string init, std::optional<int> random_state)
+    : __n_clusters(n_clusters), __max_iter(max_iter), __batch_size(batch_size),
+      __init(init), __random_state(random_state) {
     assert(init == "k-means++" || init == "random");
 }
 

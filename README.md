@@ -18,6 +18,10 @@ int main() {
 
     clusterxx::PCA pca = clusterxx::PCA(30 /* n_components */);
     auto latent_features = pca.fit_transform(X);
+
+    // We also support simple plotting
+    clusterxx::Plot plot;
+    plot.plot2d(dbscan);
 }
 ```
 

@@ -29,9 +29,8 @@ class MiniBatchKMeans : public cluster_method {
 
   public:
     MiniBatchKMeans(const uint16_t n_clusters = 8,
+                    const uint32_t max_iter = 100, uint32_t batch_size = 1024,
                     const std::string init = "k-means++",
-                    const uint32_t max_iter = 100,
-                    uint32_t batch_size = 1024,
                     std::optional<int> random_state = std::nullopt);
     ~MiniBatchKMeans() {}
 
