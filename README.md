@@ -1,5 +1,5 @@
 # ClusterXX
-ClusterXX is a C++ library that includes **clustering, manifold and decomposition** algorithms as well as the required data structures for them to be fast. Everything is implemented from scratch with the only external library being armadillo. The API follows **sklearn's** API so that you don't have to read all of our documentation.
+ClusterXX is a C++ library that includes **clustering, manifold and decomposition** algorithms as well as the required data structures for them to be fast. Everything is implemented from scratch with armadillo being the only external library. The API follows **sklearn's** API so that you don't have to read all of our documentation.
 
 
 ## Example:
