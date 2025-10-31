@@ -54,6 +54,7 @@ You can see more examples at [examples](/examples)
 First you need to install armadillo
 
 At root directory, do:
+
 **Linux/MacOS**
 ```bash
 meson install -C build
