@@ -1,4 +1,5 @@
 # ClusterXX
+![logo](assets/logo.png)
 ClusterXX is a C++ library that includes **clustering, manifold and decomposition** algorithms as well as the required data structures for them to be fast. Everything is implemented from scratch with armadillo being the only external library. The API follows **sklearn's** API so that you don't have to read all of our documentation.
 
 > [!Note]
@@ -28,6 +29,14 @@ int main() {
 ```
 
 You can see more examples at [examples](/examples)
+
+## Comparison with sklearn
+
+### t-SNE comparison on mnist
+![t-SNE comparison](assets/tsne_cpp_python_comparison_final.png)
+
+### Isomap comparison on mnist
+![Isomap comparison](assets/isomap_cpp_python_comparison.png)
 
 ## Currently implemented methods and data structures:
 - [X] DBSCAN
