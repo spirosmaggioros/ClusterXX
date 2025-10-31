@@ -36,7 +36,7 @@ You can see more examples at [examples](/examples)
 ![t-SNE comparison](assets/tsne_cpp_python_comparison_final.png)
 
 ### Isomap comparison on mnist
-![Isomap comparison](assets/isomap_cpp_python_comparison.png)
+![Isomap comparison](assets/isomap_cpp_python_comparison_final.png)
 
 ## Currently implemented methods and data structures:
 - [X] DBSCAN
