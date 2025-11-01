@@ -7,6 +7,8 @@
 #include <float.h>
 #include <random>
 
+#include <chrono>
+
 template <typename Metric>
 double clusterxx::TSNE<Metric>::__compute_beta(const arma::mat &distances,
                                                double target_perplexity,
@@ -83,11 +85,34 @@ arma::mat clusterxx::TSNE<Metric>::__compute_pairwise_affinities(
 template <typename Metric>
 std::pair<arma::mat, arma::mat>
 clusterxx::TSNE<Metric>::__compute_low_dim_affinities(const arma::mat &Y) {
+    auto t1 = std::chrono::high_resolution_clock::now();
     arma::mat pairwise_dists = metric(Y);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto t3 = std::chrono::high_resolution_clock::now();
     arma::mat q_ij = 1.0 / (1.0 + pairwise_dists);
     q_ij.diag().zeros();
+    auto t4 = std::chrono::high_resolution_clock::now();
+
+    auto t5 = std::chrono::high_resolution_clock::now();
     double total_sum = arma::accu(q_ij);
+    auto t6 = std::chrono::high_resolution_clock::now();
+
     q_ij /= total_sum;
+
+    auto compute_metric = std::chrono::duration_cast<std::chrono::milliseconds>(
+        t2 - t1
+    ).count();
+
+    auto compute_q_ij = std::chrono::duration_cast<std::chrono::milliseconds>(
+        t4 - t3
+    ).count();
+
+    auto compute_sum = std::chrono::duration_cast<std::chrono::milliseconds>(
+        t6 - t5
+    ).count();
+
+    std::cout << '[' << compute_metric << " - " << compute_q_ij << " - " << compute_sum << "]\n\n";
 
     return std::make_pair(q_ij, pairwise_dists);
 }
@@ -148,13 +173,18 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             __early_exaggeration = 1.0;
         }
 
+        // auto t1 = std::chrono::high_resolution_clock::now();
         auto [q_ij, sol_pairwise_dists] = __compute_low_dim_affinities(Y);
+        // auto t2 = std::chrono::high_resolution_clock::now();
         __gradient_data g_data = {.pairwise_affinities = symmetrized,
                                   .low_dim_affinities = q_ij,
                                   .low_dim_features = Y,
                                   .pairwise_dists = sol_pairwise_dists};
 
+        // auto t3 = std::chrono::high_resolution_clock::now();
         arma::mat gradients = __kullback_leibler_gradient(g_data);
+        // auto t4 = std::chrono::high_resolution_clock::now();
+
         double grad_norm = arma::norm(gradients, "fro");
         if (grad_norm < __min_grad_norm) {
             break;
@@ -176,8 +206,22 @@ void clusterxx::TSNE<Metric>::__fit(const arma::mat &X) {
             }
         }
 
+        // auto t5 = std::chrono::high_resolution_clock::now();
         Y_inc = (__momentum * Y_inc) - (__learning_rate * gradients);
         Y += Y_inc;
+        // auto t6 = std::chrono::high_resolution_clock::now();
+
+        // auto low_dim_affinities_computation = std::chrono::duration_cast<std::chrono::milliseconds>(
+        //     t2 - t1
+        // ).count();
+        // auto gradient_computation = std::chrono::duration_cast<std::chrono::milliseconds>(
+        //     t4 - t3
+        // ).count();
+        // auto update_solution_computation = std::chrono::duration_cast<std::chrono::milliseconds>(
+        //     t6 - t5
+        // ).count();
+
+        // std::cout << '[' << low_dim_affinities_computation << " - " << gradient_computation << " - " << update_solution_computation << '\n';
     }
 
     __out_features = Y;

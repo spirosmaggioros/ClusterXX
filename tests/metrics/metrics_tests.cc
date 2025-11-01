@@ -42,7 +42,7 @@ TEST_CASE("Testing euclidean pairwise distances", "[metrics]") {
 
 // TEST_CASE("Stress testing euclidean distance", "[metrics]") {
 //     clusterxx::pairwise_distances::euclidean_distances dist;
-// 
+//
 //     arma::mat X(5000, 30);
 //     for (int i = 0; i < 5000; i++) {
 //         std::vector<double> features;
@@ -51,12 +51,12 @@ TEST_CASE("Testing euclidean pairwise distances", "[metrics]") {
 //         }
 //         X.row(i) = arma::vec(features).t();
 //     }
-//     
+//
 //     // auto t1 = std::chrono::high_resolution_clock::now();
 //     arma::mat pairwise_dists_linear = dist(X, arma::mat());
 //     // auto t2 = std::chrono::high_resolution_clock::now();
 //     // std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-// 
+//
 //     arma::mat X_big(20000, 30);
 //     for (int i = 0; i < 20000; i++) {
 //         std::vector<double> features;
@@ -65,7 +65,7 @@ TEST_CASE("Testing euclidean pairwise distances", "[metrics]") {
 //         }
 //         X_big.row(i) = arma::vec(features).t();
 //     }
-// 
+//
 //     auto t1 = std::chrono::high_resolution_clock::now();
 //     arma::mat pairwise_dists_big = dist(X_big, arma::mat());
 //     auto t2 = std::chrono::high_resolution_clock::now();
@@ -195,4 +195,3 @@ TEST_CASE("Testing silhouette score", "[metrics]") {
     labels = kmeans.fit_predict(X);
     REQUIRE(score(X, labels) > 0.5);
 }
-

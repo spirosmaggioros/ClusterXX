@@ -57,39 +57,34 @@ namespace pairwise_distances {
 struct euclidean_distances {
     arma::mat operator()(const arma::mat &X, const arma::mat &Y = {}) {
         assert(!X.empty());
-        arma::mat _Y;
-        if (Y.empty()) {
-            _Y = X;
-        } else {
-            _Y = Y;
-        }
+        const arma::mat &_Y = Y.empty() ? X : Y;
 
         arma::vec norm_x = arma::sum(arma::square(X), 1);
         arma::vec norm_y = arma::sum(arma::square(_Y), 1);
 
         arma::mat dot_prod = X * _Y.t();
 
-        return arma::sqrt(arma::repmat(norm_x, 1, _Y.n_rows) +
-                          arma::repmat(norm_y.t(), X.n_rows, 1) - 2 * dot_prod);
+        arma::mat result = -2 * dot_prod;
+        result.each_col() += norm_x;
+        result.each_row() += norm_y.t();
+
+        result.transform([](double val) { return std::sqrt(std::max(0.0, val)); });
+
+        return result;
     }
 };
 
 struct manhattan_distances {
     arma::mat operator()(const arma::mat &X, const arma::mat &Y = {}) const {
         assert(!X.empty());
-
-        arma::mat _Y;
-        if (Y.empty()) {
-            _Y = X;
-        } else {
-            _Y = Y;
-        }
+        const arma::mat &_Y = Y.empty() ? X : Y;
 
         arma::mat distances(X.n_rows, _Y.n_rows);
 
         for (arma::uword i = 0; i < X.n_rows; i++) {
-            arma::mat diff =
-                arma::abs(arma::repmat(X.row(i), _Y.n_rows, 1) - _Y);
+            arma::rowvec x_row = X.row(i);
+            arma::mat diff = -_Y;
+            diff.each_row() += x_row;
             distances.row(i) = arma::sum(diff, 1).t();
         }
 
@@ -100,39 +95,31 @@ struct manhattan_distances {
 struct squared_euclidean_distances {
     arma::mat operator()(const arma::mat &X, const arma::mat &Y = {}) const {
         assert(!X.empty());
-
-        arma::mat _Y;
-        if (Y.empty()) {
-            _Y = X;
-        } else {
-            _Y = Y;
-        }
+        const arma::mat &_Y = Y.empty() ? X : Y;
 
         arma::vec norm_x = arma::sum(arma::square(X), 1);
         arma::vec norm_y = arma::sum(arma::square(_Y), 1);
         arma::mat dot_prod = X * _Y.t();
 
-        return arma::repmat(norm_x, 1, _Y.n_rows) +
-               arma::repmat(norm_y.t(), X.n_rows, 1) - 2 * dot_prod;
+        arma::mat result = -2 * dot_prod;
+        result.each_col() += norm_x;
+        result.each_row() += norm_y.t();
+
+        return result;
     }
 };
 
 struct chebyshev_distances {
     arma::mat operator()(const arma::mat &X, const arma::mat &Y = {}) const {
         assert(!X.empty());
-
-        arma::mat _Y;
-        if (Y.empty()) {
-            _Y = X;
-        } else {
-            _Y = Y;
-        }
+        const arma::mat &_Y = Y.empty() ? X : Y;
 
         arma::mat distances(X.n_rows, _Y.n_rows);
 
         for (arma::uword i = 0; i < X.n_rows; i++) {
-            arma::mat diff =
-                arma::abs(arma::repmat(X.row(i), _Y.n_rows, 1) - _Y);
+            arma::rowvec x_row = X.row(i);
+            arma::mat diff = -_Y;
+            diff.each_row() += x_row;
             distances.row(i) = arma::max(diff, 1);
         }
 
