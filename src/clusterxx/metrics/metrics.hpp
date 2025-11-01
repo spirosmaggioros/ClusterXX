@@ -86,6 +86,7 @@ struct manhattan_distances {
             arma::rowvec x_row = X.row(i);
             arma::mat diff = -_Y;
             diff.each_row() += x_row;
+            diff = arma::abs(diff);
             distances.row(i) = arma::sum(diff, 1).t();
         }
 
@@ -121,6 +122,7 @@ struct chebyshev_distances {
             arma::rowvec x_row = X.row(i);
             arma::mat diff = -_Y;
             diff.each_row() += x_row;
+            diff = arma::abs(diff);
             distances.row(i) = arma::max(diff, 1);
         }
 
