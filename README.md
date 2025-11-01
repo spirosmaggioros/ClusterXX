@@ -12,7 +12,19 @@ ClusterXX is a C++ library that includes **clustering, manifold and decompositio
 int main() {
     clusterxx::csv_parser parser = clusterxx::csv_parser("dataset.csv");
     auto X = parser.data();
-    clusterxx::DBSCAN dbscan = clusterxx::DBSCAN(
+
+    clusterxx::TSNE<> tsne = clusterxx::TSNE<>(
+        2, /* n_components */
+        30.0, /* complexity(use between 30 - 50) */
+        200.0, /* learning_rate */
+        12.0, /* early_exaggeration */
+        1000, /* max_iter */
+        1e-7, /* min_grad_norm */
+        300 /* n_iter_without_progress */
+    );
+    auto tsne_latent_features = tsne.fit_transform(X);
+
+    clusterxx::DBSCAN<> dbscan = clusterxx::DBSCAN<>(
         0.5, /* eps */
         5, /* num_samples */
         30, /* leaf_size */
@@ -20,7 +32,7 @@ int main() {
     std::vector<int> labels = dbscan.fit_predict(X);
 
     clusterxx::PCA pca = clusterxx::PCA(30 /* n_components */);
-    auto latent_features = pca.fit_transform(X);
+    auto pca_latent_features = pca.fit_transform(X);
 
     // We also support simple plotting
     clusterxx::Plot plot;
